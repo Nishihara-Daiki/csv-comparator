@@ -1,0 +1,208 @@
+html {
+    background-color: #f8f8f8;
+}
+
+section {
+    margin: 64px 0;
+    padding: 0 32px;
+}
+
+h3 {
+    font-weight: normal;
+    text-decoration: underline;
+}
+
+input[type="file"] {
+    padding: 16px;
+    border: dashed 1px #333;
+    border-radius: 8px;
+}
+
+input[type="text"], input[type="number"], select, textarea {
+    border: solid 1px #333;
+    padding: 2px;
+    font-size: inherit;
+}
+
+input[type="text"], input[type="number"], select, textarea, [contentEditable="true"] {
+    box-shadow: inset #999 1px 1px 2px;
+    background-color: #ffc;
+}
+
+table {
+    border-collapse: collapse;
+    white-space: nowrap;
+}
+
+th {
+    font-weight: normal;
+}
+
+td, th {
+    padding: 2px 8px;
+}
+
+td.number {
+    text-align: right;
+}
+
+.file-select .flex > * {
+    padding: 16px 16px 16px 0;
+}
+
+.file-select details {
+    margin-bottom: 16px;
+}
+
+.file-select details p {
+    margin: 0;
+}
+
+.file-select table {
+    max-width: 100%;
+    min-height: 160px;
+    max-height: 400px;
+    overflow: auto;
+    display: block;
+}
+
+.file-select thead {
+    position: sticky;
+    top: 0;
+}
+
+.file-select th, .file-select td {
+    border: solid 1px #333;
+}
+
+.file-select th {
+    background-color: #669;
+    color: #f8f8f8;
+}
+
+.file-select tr:first-child th {
+    background-color: #f8f8f8;;
+    color: inherit;
+    border: none;
+}
+
+
+
+.column-design th, .column-design td {
+    border: solid 1px #333;
+}
+
+.column-design td {
+    padding: 0;
+    min-width: 64px;
+    vertical-align: top;
+}
+
+
+.column-design .cdt-type td select {
+    width: 100%;
+    padding: 4px 8px;
+    border: none;
+}
+
+
+.column-design .cdt-file td {
+    position: relative;
+}
+
+.column-design td span {
+    padding: 4px 8px;
+    width: calc(100% - 16px);
+    display: inline-block;
+}
+
+.column-design .cdt-file td ul {
+    margin: 0;
+    padding: 0;
+    min-width: 100%;;
+    min-width: calc(100% - 2px);
+    min-height: 16px;
+    max-height: 240px;
+    overflow: auto;
+    top: 100%;
+    left: 0;
+    position: absolute;
+    z-index: 2;
+    background-color: #f8f8f8;
+    border: solid 1px #333;
+    box-shadow: #999 2px 2px 2px;
+}
+
+.column-design .cdt-file td li {
+    padding: 2px 8px;
+    width: auto;
+    width: calc(100% - 16px);
+    cursor: default;
+}
+
+.column-design .cdt-file td li:hover {
+    background-color: #e8e8e8;
+}
+
+.column-design .cdt-file2 td span,
+.column-design .cdt-header td span {
+    min-height: 48px;
+}
+
+
+.column-design .error {
+    color: red;
+}
+
+.column-design ul.error {
+    min-height: 40px;
+    padding: 0;
+}
+
+.column-design li {
+    list-style: none;
+}
+
+
+.exec button {
+    padding: 8px 16px;
+}
+
+.result {
+    min-height: 400px;
+    max-height: 800px;
+    overflow: auto;
+    display: block;
+}
+
+.result thead {
+    background-color: #669;
+    color: #f8f8f8;
+    position: sticky;
+    top: 0;
+}
+
+.result .upper-border {
+    border-top: solid 1px #333;
+}
+
+.result .lower-border {
+    border-bottom: solid 1px #333;
+}
+
+.result .add {
+    background: #cfc;
+}
+
+.result .delete {
+    background: #fcc;
+}
+
+
+.flex {
+    display: flex;
+}
+
+.none {
+    display: none;
+}

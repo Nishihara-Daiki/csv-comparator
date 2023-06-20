@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <title>CSV Comparator</title>
+</head>
+<body>
+    <section>
+        <h1>CSV Comparator</h1>
+        <p>2つのCSVファイルの比較をします。</p>
+    </section>
+
+    <section class="file-select">
+        <h2>1. ファイル選択</h2>
+        文字コード
+        <select id="encoding">
+            <option value="shift_jis">Shift_JIS</option>
+            <option value="utf-8">UTF-8</option>
+        </select>
+        <div class="flex">
+            <h3>ファイル1</h3>
+            <p><label><input id="file-1" type="file" accept="text/csv"></label></p>
+            <div>
+                <p><label>名前 <input id="file-1-name" type="text" value="file1"></label></p>
+                <p><label>ヘッダ行数 <input id="file-1-header-num" type="number" value="1"></label></p>
+            </div>
+            <details>
+                <summary>高度な設定</summary>
+                <p><label>フィルタ</label><br><textarea id="file-1-filter">true</textarea><br><button id="file-1-reload">適用してリロード</button></p>
+            </details>
+        </div>
+        プレビュー（最大トップ100行 / <span id="file-1-len">0</span>行）
+        <table id="file-1-preview"></table>
+
+        <div class="flex">
+            <h3>ファイル2</h3>
+            <p><label><input id="file-2" type="file" accept="text/csv"></label></p>
+            <div>
+                <p><label>名前 <input id="file-2-name" type="text" value="file2"></label></p>
+                <p><label>ヘッダ行数 <input id="file-2-header-num" type="number" value="1"></label></p>
+            </div>
+            <details>
+                <summary>高度な設定</summary>
+                <p><label>フィルタ</label><br><textarea id="file-2-filter">true</textarea><br><button id="file-2-reload">適用してリロード</button></p>
+            </details>
+        </div>
+        プレビュー（最大トップ100行 / <span id="file-2-len">0</span>行）
+        <table id="file-2-preview">
+        </table>
+    </section>
+
+    <section class="column-design">
+        <h2>2. カラム設計</h2>
+        <p>列を <button id="add-column">増やす</button> <button id="reduce-column">減らす</button> </p>
+        <table id="cdt">
+            <tr id="cdt-file1" class="cdt-file"><th>ファイル1</th><td><span contentEditable="true">#0</span><ul class="none"></ul></td></tr>
+            <tr id="cdt-file2" class="cdt-file cdt-file2"><th>ファイル2 <br><button id="autofill-file2">おまかせ</button></th><td><span contentEditable="true">#0</span><ul class="none"></ul></td></tr>
+            <tr id="cdt-type" class="cdt-type">
+                <th>種別</th>
+                <td>
+                    <select>
+                        <option value="key">キー</option>
+                        <option value="compare">比較</option>
+                        <option value="show">表示</option>
+                        <option value="disable">無効</option>
+                    </select>
+                </td>
+            </tr>
+            <tr id="cdt-header" class="cdt-header">
+                <th>出力ヘッダ <br><button id="autofill-header">おまかせ</button></th>
+                <td><span contentEditable="true">colmn1</span></td>
+            </tr>
+        </table>
+        <ul id="cdt-error" class="error"></ul>
+    </section>
+
+    <section class="exec">
+        <h2>3. 実行</h2>
+        <div>
+            <label><input id="show-match-line" type="checkbox" checked> 一致行も表示する</label><br>
+            <label><input id="show-key-exists-only-file1" type="checkbox" checked> キーがファイル1のみに存在する行も表示する</label><br>
+            <label><input id="show-key-exists-only-file2" type="checkbox" checked> キーがファイル2のみに存在する行も表示する</label>
+        </div>
+        <div>
+            <button id="compare">比較実行</button>
+            <button id="copy">表をクリップボードにコピー</button>
+            <!-- <button>CSV出力</button> -->
+        </div>
+        <table id="result" class="result">
+            <thead id="result-head"></thead>
+            <tbody id="result-body"></tbody>
+        </table>
+    </section>
+
+    <!-- <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.mini.min.js"></script> -->
+    <script src="script.js"></script>
+</body>
+</html>
