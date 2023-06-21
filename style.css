@@ -87,8 +87,31 @@ td.number {
 }
 
 
+.column-design .cdt-moving-column td {
+    cursor: grab;
+}
 
-.column-design th, .column-design td {
+.column-design .cdt-moving-column td:hover {
+    background-color: #e8e8e8;
+}
+
+.column-design .cdt-moving-column td:active {
+    cursor: grabbing;
+    border-bottom: solid 1px rgba(0, 0, 0, 0);
+    background-color: inherit;
+}
+
+
+.column-design thead td::before {
+    content: '';
+    margin: 12px auto 4px;
+    width: 24px;
+    height: 4px;
+    background-color: #888;
+    display: block;
+}
+
+.column-design tbody th, .column-design tbody td {
     border: solid 1px #333;
 }
 
@@ -150,7 +173,7 @@ td.number {
 }
 
 
-.column-design .error {
+.error {
     color: red;
 }
 
@@ -166,6 +189,24 @@ td.number {
 
 .exec button {
     padding: 8px 16px;
+}
+
+.exec details {
+    margin: 16px 0;
+}
+
+.compare-log {
+    margin: 0;
+    padding: 8px;
+    max-width: 1080px;
+    min-height: 32px;
+    max-height: 160px;
+    border: solid 1px #ccc;
+    overflow: auto;
+}
+
+.compare-log li {
+    list-style: none;
 }
 
 .result {

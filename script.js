@@ -109,11 +109,61 @@ let hide_suggest = e => {
     setTimeout(() => {
         ul.classList.add('none');
         ul.innerHTML = '';
-    }, 100);
+    }, 150);
 };
 
 
+let add_drag_events = (e, i, tds) => {
+    e.onclick = () => console.log('clicked')
+    e.ondragstart = event => {
+        event.dataTransfer.setData('text/plain', i);
+        console.log('start')
+    };
+    e.ondragover = event => {
+        event.preventDefault();
+        let rect = e.getBoundingClientRect();
+        if ((event.clientX - rect.left) < rect.width / 2) {
+            e.style.borderLeft = 'solid 3px #333';
+            e.style.borderRight = '';
+        }
+        else {
+            e.style.borderLeft = '';
+            e.style.borderRight = 'solid 3px #333';
+        }
+
+    };
+    e.ondragleave = event => {
+        e.style.borderLeft = '';
+        e.style.borderRight = '';
+    };
+    e.ondrop = event => {
+        event.preventDefault();
+        let moving_i = +event.dataTransfer.getData('text/plain');
+        let rect = e.getBoundingClientRect();
+
+        if ((event.clientX - rect.left) < rect.width / 2) {
+            move_column(moving_i, i, true);
+        }
+        else {
+            console.log('r', i + 1, moving_i);
+            move_column(moving_i, i, false);
+        }
+
+        e.style.borderLeft = '';
+        e.style.borderRight = '';
+    };
+    let move_column = (from, to, is_before) => {
+        let move_td = tds => tds[to].parentNode.insertBefore(tds[from], is_before ? tds[to] : tds[to].nextSibling);
+
+        move_td(document.querySelectorAll('#cdt-file1 td'));
+        move_td(document.querySelectorAll('#cdt-file2 td'));
+        move_td(document.querySelectorAll('#cdt-type td'));
+        move_td(document.querySelectorAll('#cdt-header td'));
+    }
+}
+
 let add_cdt_events = () => {
+    document.querySelectorAll('#cdt-moving-column td').forEach(add_drag_events);
     document.querySelectorAll('#cdt td').forEach(e => e.oninput = check_cdt);
     document.querySelectorAll('#cdt-file1 td span').forEach(e => e.onfocus = () => show_suggest(e, 1));
     document.querySelectorAll('#cdt-file1 td span').forEach(e => e.onblur = () => hide_suggest(e));
@@ -122,6 +172,7 @@ let add_cdt_events = () => {
 };
 
 let add_column = () => {
+    $id('cdt-moving-column').insertAdjacentHTML('beforeend', '<td draggable="true"></td>');
     $id('cdt-file1').insertAdjacentHTML('beforeend', '<td><span contentEditable="true"></span><ul class="none"></ul></td>');
     $id('cdt-file2').insertAdjacentHTML('beforeend', '<td><span contentEditable="true"></span><ul class="none"></ul></td>');
     $id('cdt-type').insertAdjacentHTML('beforeend', '<td><select><option value="key">キー</option><option value="compare">比較</option><option value="show">表示</option><option value="disable">無効</option></select></td>');
@@ -134,6 +185,7 @@ let add_column = () => {
 let reduce_column = () => {
     let last_index = column_design_table_row_num() - 1;
     if (last_index > 1) {
+        $id('cdt-moving-column').children[last_index].remove();
         $id('cdt-file1').children[last_index].remove();
         $id('cdt-file2').children[last_index].remove();
         $id('cdt-type').children[last_index].remove();
@@ -253,8 +305,8 @@ let autofill_file2 = () => {
                 break;
             case ParseType.MULTIPLE:
                 let labels = parser(h).map(p => search(p(file1_header_labels)));
-                if (labels[0] != -1 && labels[-1] != -1) {
-                    cdt_file2.children[i + 1].children[0].textContent = `#${labels[0]}-#${labels[1]}`;
+                if (labels[0] != -1 && labels[labels.length-1] != -1) {
+                    cdt_file2.children[i + 1].children[0].textContent = `#${labels[0]}-#${labels[labels.length-1]}`;
                 }
                 break;
         }
@@ -335,13 +387,14 @@ let check_key = (cdt) => {
     let _check_key = (n, name, label) => {
         let key_funcs = get_key_funcs(cdt, name);
         let set = new Set();
-        window.data[n].forEach(line => {
+        for (let line of window.data[n]) {
             let key = create_key(key_funcs, line);
             if (set.has(key)) {
-                console.log(`キー重複: ${label}: ${key}`);
+                compare_log(`キー重複: ${label}: ${key}`, LogType.ERROR, true);
                 return false;
             }
-        });
+            set.add(key);
+        }
     };
 
     if (_check_key(1, 'cdt-file1', 'ファイル1') == false) {
@@ -363,12 +416,12 @@ let output_result_line = (cdt, line1, line2) => {
     let convert_line = (line, name) => cdt[name].map(f => f(line));
     if (line1 != null && line2 == null) {
         if ($id('show-key-exists-only-file1').checked) {
-            trs = ['<tr class="upper-border lower-border"><th>' + $id('file-1-name').value + '</th>' + convert_line(line1, 'cdt-file1').map(c => `<td class="delete">${c}</td>`).join('') + '</tr>']
+            trs = ['<tr class="upper-border lower-border"><th>' + $id('file-1-name').value + '</th>' + convert_line(line1, 'cdt-file1').map(c => `<td class="delete ${is_numeric(c) ? 'number' : ''}">${c}</td>`).join('') + '</tr>']
         }
     }
     else if (line1 == null && line2 != null) {
         if ($id('show-key-exists-only-file2').checked) {
-            trs = ['<tr class="upper-border lower-border"><th>' + $id('file-2-name').value + '</th>' + convert_line(line2, 'cdt-file2').map(c => `<td class="add">${c}</td>`).join('') + '</tr>']
+            trs = ['<tr class="upper-border lower-border"><th>' + $id('file-2-name').value + '</th>' + convert_line(line2, 'cdt-file2').map(c => `<td class="add ${is_numeric(c) ? 'number' : ''}">${c}</td>`).join('') + '</tr>']
         }
     }
     else {
@@ -396,6 +449,7 @@ let output_result_line = (cdt, line1, line2) => {
 
 
 let compare = () => {
+    compare_log('比較を開始します。', LogType.LOG);
     cdt = parse_all();
     if (check_key(cdt) == false) {
         return;
@@ -423,8 +477,33 @@ let compare = () => {
     for (let key in file2_key2lines) {
         output_result_line(cdt, null, file2_key2lines[key]);
     }
+    compare_log('比較を完了しました。', LogType.LOG, true);
 };
 
+
+const LogType = Object.freeze({
+    LOG: 0,
+    WARNING: 1,
+    ERROR: 2,
+});
+
+
+let compare_log = (text, type, is_scroll_to_bottom) => {
+    let class_name = '';
+    switch (type) {
+        case LogType.LOG: class_name = ''; break;
+        case LogType.WARNING: class_name = 'warning'; break;
+        case LogType.ERROR: class_name = 'error'; break;
+        default: console.error('key not found'); break;
+    }
+    let date = new Date();
+    let timestamp = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+    let ul = $id('compare-log');
+    ul.insertAdjacentHTML('beforeend', `<li class="${class_name}">[${timestamp}] ${text}</li>`);
+    if (is_scroll_to_bottom) {
+        ul.scrollTo(0, ul.scrollHeight);
+    }
+}
 
 let copy_result = () => {
     let r = document.createRange();
@@ -434,7 +513,7 @@ let copy_result = () => {
     s.addRange(r);
     navigator.clipboard.writeText(s);
     s.removeAllRanges();
-}
+};
 
 let loaded = () => {
     $id('file-1').onchange = (event) => file_changed(event.target, 1);

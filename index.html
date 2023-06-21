@@ -54,23 +54,28 @@
         <h2>2. カラム設計</h2>
         <p>列を <button id="add-column">増やす</button> <button id="reduce-column">減らす</button> </p>
         <table id="cdt">
-            <tr id="cdt-file1" class="cdt-file"><th>ファイル1</th><td><span contentEditable="true">#0</span><ul class="none"></ul></td></tr>
-            <tr id="cdt-file2" class="cdt-file cdt-file2"><th>ファイル2 <br><button id="autofill-file2">おまかせ</button></th><td><span contentEditable="true">#0</span><ul class="none"></ul></td></tr>
-            <tr id="cdt-type" class="cdt-type">
-                <th>種別</th>
-                <td>
-                    <select>
-                        <option value="key">キー</option>
-                        <option value="compare">比較</option>
-                        <option value="show">表示</option>
-                        <option value="disable">無効</option>
-                    </select>
-                </td>
-            </tr>
-            <tr id="cdt-header" class="cdt-header">
-                <th>出力ヘッダ <br><button id="autofill-header">おまかせ</button></th>
-                <td><span contentEditable="true">colmn1</span></td>
-            </tr>
+            <thead>
+                <tr id="cdt-moving-column" class="cdt-moving-column"><th></th><td draggable="true"></td></tr>
+            </thead>
+            <tbody>
+                <tr id="cdt-file1" class="cdt-file"><th>ファイル1</th><td><span contentEditable="true">#0</span><ul class="none"></ul></td></tr>
+                <tr id="cdt-file2" class="cdt-file cdt-file2"><th>ファイル2 <br><button id="autofill-file2">おまかせ</button></th><td><span contentEditable="true">#0</span><ul class="none"></ul></td></tr>
+                <tr id="cdt-type" class="cdt-type">
+                    <th>種別</th>
+                    <td>
+                        <select>
+                            <option value="key">キー</option>
+                            <option value="compare">比較</option>
+                            <option value="show">表示</option>
+                            <option value="disable">無効</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr id="cdt-header" class="cdt-header">
+                    <th>出力ヘッダ <br><button id="autofill-header">おまかせ</button></th>
+                    <td><span contentEditable="true">column1</span></td>
+                </tr>
+            </tbody>
         </table>
         <ul id="cdt-error" class="error"></ul>
     </section>
@@ -87,6 +92,11 @@
             <button id="copy">表をクリップボードにコピー</button>
             <!-- <button>CSV出力</button> -->
         </div>
+        <details open="true">
+            <summary>実行ログ</summary>
+            <ul id="compare-log" class="compare-log"></ul>
+        </details>
+
         <table id="result" class="result">
             <thead id="result-head"></thead>
             <tbody id="result-body"></tbody>
