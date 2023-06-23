@@ -9,15 +9,15 @@
     <section>
         <h1>CSV Comparator</h1>
         <p>2つのCSVファイルの比較をします。<a target="_blank" href="https://github.com/Nishihara-Daiki/csv-comparator">ヘルプを開く</a></p>
-    </section>
-
-    <section class="file-select">
-        <h2>1. ファイル選択</h2>
-        文字コード
+        ファイル読み込み時の文字コード
         <select id="encoding">
             <option value="shift_jis">Shift_JIS</option>
             <option value="utf-8">UTF-8</option>
         </select>
+    </section>
+
+    <section class="file-select">
+        <h2>1. ファイル選択</h2>
         <div class="flex">
             <h3>ファイル1</h3>
             <p><label><input id="file-1" type="file" accept="text/csv"></label></p>
@@ -52,6 +52,7 @@
 
     <section class="column-design">
         <h2>2. カラム設計</h2>
+        <h3>設計</h3>
         <p>列を <button id="add-column">増やす</button> <button id="reduce-column">減らす</button> </p>
         <table id="cdt">
             <thead>
@@ -89,6 +90,9 @@
             </tbody>
         </table>
         <ul id="cdt-error" class="error"></ul>
+        <h3>設計の保存/読み込み</h3>
+        <p>JSONファイルに書き出す <button id="save-cdt-file">ダウンロード</button></p>
+        <p>JSONファイルから読み込む <button class="load-cdt-file-button">ファイルを選択<input id="load-cdt-file" type="file" accept="application/json"></button></p>
     </section>
 
     <section class="exec">

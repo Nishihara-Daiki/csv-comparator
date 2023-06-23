@@ -51,6 +51,73 @@ let file_changed = (e, file_num) => {
 };
 
 
+let save_file = (filename, text) => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], {type: 'application/json'}));
+    a.download = filename;    
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
+
+
+let save_cdt_file = () => {
+    let cdt_file1 = get_column_design_line('cdt-file1');
+    let cdt_file2 = get_column_design_line('cdt-file2');
+    let cdt_type = get_column_design_line('cdt-type');
+    let cdt_header = get_column_design_line('cdt-header');
+    let cdt_align = get_column_design_line('cdt-align');
+    let cdt_obj = range(0, cdt_file1.length).map(i => ({
+        'cdt-file1': cdt_file1[i],
+        'cdt-file2': cdt_file2[i],
+        'cdt-type': cdt_type[i],
+        'cdt-header': cdt_header[i],
+        'cdt-align': cdt_align[i]
+    }));
+    save_file('cdt.json', JSON.stringify(cdt_obj, null, 4));
+};
+
+
+let load_cdt_file = e => {
+    let file = e.files[0];
+    if (file === undefined) {
+        return;
+    }
+    let encoding = $id('encoding').value;
+    let reader = new FileReader();
+
+    reader.readAsText(file, encoding);
+    reader.onload = () => {
+        let cdt_json = JSON.parse(reader.result);
+        let row_diff = cdt_json.length - column_design_table_row_num() + 1;
+        if (row_diff > 0) {
+            range(0, row_diff).forEach(() => add_column());
+        }
+        else {
+            range(0, -row_diff).forEach(() => reduce_column());
+        }
+        [...$id('cdt-file1').children].slice(1).forEach((td, i) => {
+            td.children[0].textContent = 'cdt-file1' in cdt_json[i] ? cdt_json[i]['cdt-file1'] : '';
+        });
+        [...$id('cdt-file2').children].slice(1).forEach((td, i) => {
+            td.children[0].textContent = 'cdt-file2' in cdt_json[i] ? cdt_json[i]['cdt-file2'] : '';
+        });
+        [...$id('cdt-type').children].slice(1).forEach((td, i) => {
+            td.children[0].value = 'cdt-type' in cdt_json[i] ? cdt_json[i]['cdt-type'] : 'key';
+        });
+        [...$id('cdt-header').children].slice(1).forEach((td, i) => {
+            td.children[0].innerHTML = 'cdt-header' in cdt_json[i] ? cdt_json[i]['cdt-header'].replace(/\n/g, '<br>') : '';
+        });
+        [...$id('cdt-align').children].slice(1).forEach((td, i) => {
+            td.children[0].value = 'cdt-align' in cdt_json[i] ? cdt_json[i]['cdt-align'] : 'auto';
+        });
+        check_cdt();
+        e.value = '';
+    };
+};
+
+
 let get_header_num = (file_num) => {
     return +$id('file-' + file_num + '-header-num').value;
 };
@@ -588,6 +655,8 @@ let loaded = () => {
     $id('file-2-header-num').onchange = (event) => update_preview(2);
     $id('file-1-reload').onclick = (event) => reload_file(1);
     $id('file-2-reload').onclick = (event) => reload_file(2);
+    $id('save-cdt-file').onclick = () => save_cdt_file();
+    $id('load-cdt-file').onchange = (event) => load_cdt_file(event.target);
     $id('add-column').onclick = () => add_column();
     $id('reduce-column').onclick = () => reduce_column();
     $id('autofill-file2').onclick = () => autofill_file2();
