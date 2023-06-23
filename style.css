@@ -232,6 +232,11 @@ td, th {
     top: 0;
 }
 
+.result th:not(:first-child),
+.result td:not(:first-child) {
+    border-left: solid 1px #ccc;
+}
+
 .result .original-column {
     background-color: #99c;
 }
