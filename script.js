@@ -3,6 +3,8 @@ const $id = (id) => (document.getElementById(id));
 
 let is_numeric = n => !isNaN(n);
 
+let result_line_num = 0;
+
 /*
   function parseCsvLine from https://zenn.dev/itte/articles/516228940932a5
 */
@@ -24,7 +26,7 @@ let read_csv = (file, callback) => {
     reader.readAsText(file, encoding);
     reader.onload = () => {
         let data = reader.result.trimEnd().replace(/\r/g, '').split('\n');
-        callback(data.map(line => parse_csv_line(line).map(c => (is_numeric(c) ? +c : c))));
+        callback(data.map(line => parse_csv_line(line)));
     };
 };
 
@@ -49,6 +51,73 @@ let file_changed = (e, file_num) => {
 };
 
 
+let save_file = (filename, text) => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], {type: 'application/json'}));
+    a.download = filename;    
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
+
+
+let save_cdt_file = () => {
+    let cdt_file1 = get_column_design_line('cdt-file1');
+    let cdt_file2 = get_column_design_line('cdt-file2');
+    let cdt_type = get_column_design_line('cdt-type');
+    let cdt_header = get_column_design_line('cdt-header');
+    let cdt_align = get_column_design_line('cdt-align');
+    let cdt_obj = range(0, cdt_file1.length).map(i => ({
+        'cdt-file1': cdt_file1[i],
+        'cdt-file2': cdt_file2[i],
+        'cdt-type': cdt_type[i],
+        'cdt-header': cdt_header[i],
+        'cdt-align': cdt_align[i]
+    }));
+    save_file('cdt.json', JSON.stringify(cdt_obj, null, 4));
+};
+
+
+let load_cdt_file = e => {
+    let file = e.files[0];
+    if (file === undefined) {
+        return;
+    }
+    let encoding = $id('encoding').value;
+    let reader = new FileReader();
+
+    reader.readAsText(file, encoding);
+    reader.onload = () => {
+        let cdt_json = JSON.parse(reader.result);
+        let row_diff = cdt_json.length - column_design_table_row_num() + 1;
+        if (row_diff > 0) {
+            range(0, row_diff).forEach(() => add_column());
+        }
+        else {
+            range(0, -row_diff).forEach(() => reduce_column());
+        }
+        [...$id('cdt-file1').children].slice(1).forEach((td, i) => {
+            td.children[0].textContent = 'cdt-file1' in cdt_json[i] ? cdt_json[i]['cdt-file1'] : '';
+        });
+        [...$id('cdt-file2').children].slice(1).forEach((td, i) => {
+            td.children[0].textContent = 'cdt-file2' in cdt_json[i] ? cdt_json[i]['cdt-file2'] : '';
+        });
+        [...$id('cdt-type').children].slice(1).forEach((td, i) => {
+            td.children[0].value = 'cdt-type' in cdt_json[i] ? cdt_json[i]['cdt-type'] : 'key';
+        });
+        [...$id('cdt-header').children].slice(1).forEach((td, i) => {
+            td.children[0].innerHTML = 'cdt-header' in cdt_json[i] ? cdt_json[i]['cdt-header'].replace(/\n/g, '<br>') : '';
+        });
+        [...$id('cdt-align').children].slice(1).forEach((td, i) => {
+            td.children[0].value = 'cdt-align' in cdt_json[i] ? cdt_json[i]['cdt-align'] : 'auto';
+        });
+        check_cdt();
+        e.value = '';
+    };
+};
+
+
 let get_header_num = (file_num) => {
     return +$id('file-' + file_num + '-header-num').value;
 };
@@ -64,7 +133,7 @@ let update_preview = (file_num) => {
         return '<tr>' + v.map(c => '<th>' + c + '</th>').join('') + '</tr>'
     });
     let lines = window.data[file_num].slice(header_num, header_num + 100).map((v) => {
-        return '<tr>' + v.map(c => `<td ${is_numeric(c) ? 'class="number"' : ''}>` + c + '</td>').join('') + '</tr>'
+        return '<tr>' + v.map(c => `<td ${is_numeric(c) ? 'class="align-right"' : ''}>` + c + '</td>').join('') + '</tr>'
     });
     table.innerHTML = `<thead>${id_header}${headers.join('')}</thead>` + `<tbody>${lines.join('')}</tbody>`;
 };
@@ -177,6 +246,7 @@ let add_column = () => {
     $id('cdt-file2').insertAdjacentHTML('beforeend', '<td><span contentEditable="true"></span><ul class="none"></ul></td>');
     $id('cdt-type').insertAdjacentHTML('beforeend', '<td><select><option value="key">キー</option><option value="compare">比較</option><option value="show">表示</option><option value="disable">無効</option></select></td>');
     $id('cdt-header').insertAdjacentHTML('beforeend', '<td><span contentEditable="true"></span></td>');
+    $id('cdt-align').insertAdjacentHTML('beforeend', '<td><select><option value="auto">自動</option><option value="left">左揃え</option><option value="center">中央揃え</option><option value="right">右揃え</option></select></td>');
     add_cdt_events();
     check_cdt();
 };
@@ -190,6 +260,7 @@ let reduce_column = () => {
         $id('cdt-file2').children[last_index].remove();
         $id('cdt-type').children[last_index].remove();
         $id('cdt-header').children[last_index].remove();
+        $id('cdt-align').children[last_index].remove();
     }
     check_cdt();
 };
@@ -203,7 +274,8 @@ let get_column_design_line = (name) => {
             return line.map(e => e.children[0].textContent);
         
         case 'cdt-type':
-            return line.map(e => e.children[0].value);
+        case 'cdt-align':
+                return line.map(e => e.children[0].value);
 
         case 'cdt-header':
             return line.map(e => e.children[0].innerHTML.replaceAll('<br>', '\n'));
@@ -256,11 +328,12 @@ let parser = (equation) => {
 };
 
 let parse_all = () => {
-    let cdt = {'cdt-file1': [], 'cdt-file2': [], 'cdt-type': [], 'cdt-header': []};
+    let cdt = {'cdt-file1': [], 'cdt-file2': [], 'cdt-type': [], 'cdt-header': [], 'cdt-align': []};
     let cdt_file1 = get_column_design_line('cdt-file1');
     let cdt_file2 = get_column_design_line('cdt-file2');
     let cdt_type = get_column_design_line('cdt-type');
     let cdt_header = get_column_design_line('cdt-header');
+    let cdt_align = get_column_design_line('cdt-align');
 
     cdt_type.forEach((type, i) => {
         if (type != 'disable') {
@@ -269,6 +342,7 @@ let parse_all = () => {
             cdt['cdt-file2'] = cdt['cdt-file2'].concat(parser(cdt_file2[i]));
             cdt['cdt-type'] = cdt['cdt-type'].concat( file1_parsed.fill(cdt_type[i]) );
             cdt['cdt-header'] = cdt['cdt-header'].concat( file1_parsed.map((v, j) => cdt_header[i].split('\n').concat(file1_parsed.fill(''))[j]) )
+            cdt['cdt-align'] = cdt['cdt-align'].concat( file1_parsed.fill(cdt_align[i]) );
         }
     });
 
@@ -315,10 +389,20 @@ let autofill_file2 = () => {
 };
 
 
+let get_file_last_header_labels = (file_num) => {
+    let file_last_header_num = get_header_num(file_num) - 1;
+    if (file_last_header_num < 0) {
+        return Array(window.data[file_num][0].length).fill('');
+    }
+    else {
+        return window.data[file_num][file_last_header_num];
+    }
+};
+
+
 let autofill_header = () => {
     let file2_header = get_column_design_line('cdt-file2');
-    let file2_last_header_num = Math.max(get_header_num(2) - 1, 0);
-    let file2_header_labels = window.data[2][file2_last_header_num];
+    let file2_header_labels = get_file_last_header_labels(2);
     let output_header = $id('cdt-header');
     file2_header.forEach((h, i) => {
         switch(get_parse_type(h)) {
@@ -407,21 +491,61 @@ let check_key = (cdt) => {
 
 
 let reset_result = (cdt) => {
-    $id('result-head').innerHTML = '<tr><th></th>' + cdt['cdt-header'].map(c => `<th>${c}</th>`).join('') + '</tr>';
+    let is_side_by_side = $id('show-side-by-side').checked;
+    let ths = ['<th>#</th>'];
+    let ths_from_cdt = cdt['cdt-header'].map(c => `<th>${c}</th>`);
+    if (is_side_by_side) {
+        ths = ths.concat(['<th></th>']).concat(ths_from_cdt).concat(get_file_last_header_labels(1).map(c => `<th class="original-column">${c}</th>`));
+        ths = ths.concat(['<th></th>']).concat(ths_from_cdt).concat(get_file_last_header_labels(2).map(c => `<th class="original-column">${c}</th>`));
+    }
+    else {
+        ths = ths.concat(['<th></th>']).concat(ths_from_cdt);
+    }
+    $id('result-head').innerHTML = '<tr>' + ths.join('') + '</tr>';
     $id('result-body').innerHTML = '';
+    result_line_num = 1;
 };
 
-let output_result_line = (cdt, line1, line2) => {
+let output_result_line = (cdt, line1, line2, filling_num) => {
     let trs = [];
     let convert_line = (line, name) => cdt[name].map(f => f(line));
+    let is_side_by_side = $id('show-side-by-side').checked;
+    let get_align_classname = (value, index) => {
+        if (cdt['cdt-align'][index] == 'auto') {
+            if (cdt['cdt-type'][index] == 'key') {
+                return 'align-left';
+            }
+            return is_numeric(value) ? 'align-right' : 'align-left';
+        }
+        return `align-${cdt['cdt-align'][index]}`;
+    };
     if (line1 != null && line2 == null) {
         if ($id('show-key-exists-only-file1').checked) {
-            trs = ['<tr class="upper-border lower-border"><th>' + $id('file-1-name').value + '</th>' + convert_line(line1, 'cdt-file1').map(c => `<td class="delete ${is_numeric(c) ? 'number' : ''}">${c}</td>`).join('') + '</tr>']
+            tds = ['<th>' + $id('file-1-name').value + '</th>'];
+            tds = tds.concat( convert_line(line1, 'cdt-file1').map((c, i) => `<td class="delete ${get_align_classname(c, i)}">${c}</td>`) );
+            if (is_side_by_side) {
+                tds = tds.concat( line1.map(c => `<td>${c}</td>`) );
+                tds.push('<th></th>');
+                tds = tds.concat( Array(cdt['cdt-file2'].length).fill('<td></td>') );
+                tds = tds.concat( Array(filling_num).fill('<td></td>') );
+            }
+            trs = ['<tr class="upper-border lower-border">' + `<th>${result_line_num++}</th>` + tds.join('') + '</tr>'];
         }
     }
     else if (line1 == null && line2 != null) {
         if ($id('show-key-exists-only-file2').checked) {
-            trs = ['<tr class="upper-border lower-border"><th>' + $id('file-2-name').value + '</th>' + convert_line(line2, 'cdt-file2').map(c => `<td class="add ${is_numeric(c) ? 'number' : ''}">${c}</td>`).join('') + '</tr>']
+            let tds = [];
+            if (is_side_by_side) {
+                tds = ['<th></th>'];
+                tds = tds.concat( Array(cdt['cdt-file1'].length).fill('<td></td>') );
+                tds = tds.concat( Array(filling_num).fill('<td></td>') );
+            }
+            tds.push('<th>' + $id('file-2-name').value + '</th>');
+            tds = tds.concat(convert_line(line2, 'cdt-file2').map((c, i) => `<td class="add ${get_align_classname(c, i)}">${c}</td>`).join(''));
+            if (is_side_by_side) {
+                tds = tds.concat( line2.map(c => `<td>${c}</td>`) );
+            }
+            trs = ['<tr class="upper-border lower-border">' + `<th>${result_line_num++}</th>` + tds.join('') + '</tr>'];
         }
     }
     else {
@@ -434,14 +558,21 @@ let output_result_line = (cdt, line1, line2) => {
             let c2 = converted_line2[i];
             let is_different = cdt['cdt-type'][i] == 'compare' && c1 != c2;
             is_any_different = is_different || is_any_different;
-            tds1.push(`<td class="${is_different ? 'delete': ''} ${is_numeric(c1) ? 'number' : ''}">${c1}</td>`);
-            tds2.push(`<td class="${is_different ? 'add': ''} ${is_numeric(c2) ? 'number' : ''}">${c2}</td>`);
+            tds1.push(`<td class="${is_different ? 'delete': ''} ${get_align_classname(c1, i)}">${c1}</td>`);
+            tds2.push(`<td class="${is_different ? 'add': ''} ${get_align_classname(c2, i)}">${c2}</td>`);
         });
         if ($id('show-match-line').checked || is_any_different) {
-            trs = [
-                '<tr class="upper-border">' + tds1.join('') + '</tr>',
-                '<tr class="lower-border">' + tds2.join('') + '</tr>'
-            ];
+            if (is_side_by_side) {
+                tds1 = tds1.concat( line1.map(c => `<td>${c}</td>`) );
+                tds2 = tds2.concat( line2.map(c => `<td>${c}</td>`) );
+                trs = ['<tr class="upper-border lower-border">' + `<th>${result_line_num++}</th>` + tds1.join('') + tds2.join('') + '</tr>'];
+            }
+            else {
+                trs = [
+                    '<tr class="upper-border">' + `<th>${result_line_num}</th>` + tds1.join('') + '</tr>',
+                    '<tr class="lower-border">' + `<th>${result_line_num++}</th>` + tds2.join('') + '</tr>'
+                ];
+            }
         }
     }
     $id('result-body').insertAdjacentHTML('beforeend', trs.join(''));
@@ -463,6 +594,8 @@ let compare = () => {
     let file1_key_funcs = get_key_funcs(cdt, 'cdt-file1');
     let file1_header_num = get_header_num(1);
 
+    let line1_num = window.data[1][0].length;
+    let line2_num = window.data[2][0].length;
 
     window.data[1].slice(file1_header_num).forEach((line, i) => {
         let key = create_key(file1_key_funcs, line);
@@ -471,11 +604,11 @@ let compare = () => {
             delete file2_key2lines[key];
         }
         else {
-            output_result_line(cdt, line, null);
+            output_result_line(cdt, line, null, line2_num);
         }
     });
     for (let key in file2_key2lines) {
-        output_result_line(cdt, null, file2_key2lines[key]);
+        output_result_line(cdt, null, file2_key2lines[key], line1_num);
     }
     compare_log('比較を完了しました。', LogType.LOG, true);
 };
@@ -522,6 +655,8 @@ let loaded = () => {
     $id('file-2-header-num').onchange = (event) => update_preview(2);
     $id('file-1-reload').onclick = (event) => reload_file(1);
     $id('file-2-reload').onclick = (event) => reload_file(2);
+    $id('save-cdt-file').onclick = () => save_cdt_file();
+    $id('load-cdt-file').onchange = (event) => load_cdt_file(event.target);
     $id('add-column').onclick = () => add_column();
     $id('reduce-column').onclick = () => reduce_column();
     $id('autofill-file2').onclick = () => autofill_file2();
