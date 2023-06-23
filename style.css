@@ -42,8 +42,16 @@ td, th {
     padding: 2px 8px;
 }
 
-td.number {
+.align-left {
+    text-align: left;
+}
+
+.align-right {
     text-align: right;
+}
+
+.align-center {
+    text-align: center;
 }
 
 .file-select .flex > * {
@@ -122,7 +130,8 @@ td.number {
 }
 
 
-.column-design .cdt-type td select {
+.column-design .cdt-type td select,
+.column-design .cdt-align td select {
     width: 100%;
     padding: 4px 8px;
     border: none;

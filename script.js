@@ -24,7 +24,7 @@ let read_csv = (file, callback) => {
     reader.readAsText(file, encoding);
     reader.onload = () => {
         let data = reader.result.trimEnd().replace(/\r/g, '').split('\n');
-        callback(data.map(line => parse_csv_line(line).map(c => (is_numeric(c) ? +c : c))));
+        callback(data.map(line => parse_csv_line(line)));
     };
 };
 
@@ -64,7 +64,7 @@ let update_preview = (file_num) => {
         return '<tr>' + v.map(c => '<th>' + c + '</th>').join('') + '</tr>'
     });
     let lines = window.data[file_num].slice(header_num, header_num + 100).map((v) => {
-        return '<tr>' + v.map(c => `<td ${is_numeric(c) ? 'class="number"' : ''}>` + c + '</td>').join('') + '</tr>'
+        return '<tr>' + v.map(c => `<td ${is_numeric(c) ? 'class="align-right"' : ''}>` + c + '</td>').join('') + '</tr>'
     });
     table.innerHTML = `<thead>${id_header}${headers.join('')}</thead>` + `<tbody>${lines.join('')}</tbody>`;
 };
@@ -177,6 +177,7 @@ let add_column = () => {
     $id('cdt-file2').insertAdjacentHTML('beforeend', '<td><span contentEditable="true"></span><ul class="none"></ul></td>');
     $id('cdt-type').insertAdjacentHTML('beforeend', '<td><select><option value="key">キー</option><option value="compare">比較</option><option value="show">表示</option><option value="disable">無効</option></select></td>');
     $id('cdt-header').insertAdjacentHTML('beforeend', '<td><span contentEditable="true"></span></td>');
+    $id('cdt-align').insertAdjacentHTML('beforeend', '<td><select><option value="auto">自動</option><option value="left">左揃え</option><option value="center">中央揃え</option><option value="right">右揃え</option></select></td>');
     add_cdt_events();
     check_cdt();
 };
@@ -190,6 +191,7 @@ let reduce_column = () => {
         $id('cdt-file2').children[last_index].remove();
         $id('cdt-type').children[last_index].remove();
         $id('cdt-header').children[last_index].remove();
+        $id('cdt-align').children[last_index].remove();
     }
     check_cdt();
 };
@@ -203,7 +205,8 @@ let get_column_design_line = (name) => {
             return line.map(e => e.children[0].textContent);
         
         case 'cdt-type':
-            return line.map(e => e.children[0].value);
+        case 'cdt-align':
+                return line.map(e => e.children[0].value);
 
         case 'cdt-header':
             return line.map(e => e.children[0].innerHTML.replaceAll('<br>', '\n'));
@@ -256,11 +259,12 @@ let parser = (equation) => {
 };
 
 let parse_all = () => {
-    let cdt = {'cdt-file1': [], 'cdt-file2': [], 'cdt-type': [], 'cdt-header': []};
+    let cdt = {'cdt-file1': [], 'cdt-file2': [], 'cdt-type': [], 'cdt-header': [], 'cdt-align': []};
     let cdt_file1 = get_column_design_line('cdt-file1');
     let cdt_file2 = get_column_design_line('cdt-file2');
     let cdt_type = get_column_design_line('cdt-type');
     let cdt_header = get_column_design_line('cdt-header');
+    let cdt_align = get_column_design_line('cdt-align');
 
     cdt_type.forEach((type, i) => {
         if (type != 'disable') {
@@ -269,6 +273,7 @@ let parse_all = () => {
             cdt['cdt-file2'] = cdt['cdt-file2'].concat(parser(cdt_file2[i]));
             cdt['cdt-type'] = cdt['cdt-type'].concat( file1_parsed.fill(cdt_type[i]) );
             cdt['cdt-header'] = cdt['cdt-header'].concat( file1_parsed.map((v, j) => cdt_header[i].split('\n').concat(file1_parsed.fill(''))[j]) )
+            cdt['cdt-align'] = cdt['cdt-align'].concat( file1_parsed.fill(cdt_align[i]) );
         }
     });
 
@@ -435,10 +440,19 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
     let trs = [];
     let convert_line = (line, name) => cdt[name].map(f => f(line));
     let is_side_by_side = $id('show-side-by-side').checked;
+    let get_align_classname = (value, index) => {
+        if (cdt['cdt-align'][index] == 'auto') {
+            if (cdt['cdt-type'][index] == 'key') {
+                return 'align-left';
+            }
+            return is_numeric(value) ? 'align-right' : 'align-left';
+        }
+        return `align-${cdt['cdt-align'][index]}`;
+    };
     if (line1 != null && line2 == null) {
         if ($id('show-key-exists-only-file1').checked) {
             tds = ['<th>' + $id('file-1-name').value + '</th>'];
-            tds = tds.concat( convert_line(line1, 'cdt-file1').map(c => `<td class="delete ${is_numeric(c) ? 'number' : ''}">${c}</td>`) );
+            tds = tds.concat( convert_line(line1, 'cdt-file1').map((c, i) => `<td class="delete ${get_align_classname(c, i)}">${c}</td>`) );
             if (is_side_by_side) {
                 tds = tds.concat( line1.map(c => `<td>${c}</td>`) );
                 tds.push('<th></th>');
@@ -457,7 +471,7 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
                 tds = tds.concat( Array(filling_num).fill('<td></td>') );
             }
             tds.push('<th>' + $id('file-2-name').value + '</th>');
-            tds = tds.concat(convert_line(line2, 'cdt-file2').map(c => `<td class="add ${is_numeric(c) ? 'number' : ''}">${c}</td>`).join(''));
+            tds = tds.concat(convert_line(line2, 'cdt-file2').map((c, i) => `<td class="add ${get_align_classname(c, i)}">${c}</td>`).join(''));
             if (is_side_by_side) {
                 tds = tds.concat( line2.map(c => `<td>${c}</td>`) );
             }
@@ -474,8 +488,8 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
             let c2 = converted_line2[i];
             let is_different = cdt['cdt-type'][i] == 'compare' && c1 != c2;
             is_any_different = is_different || is_any_different;
-            tds1.push(`<td class="${is_different ? 'delete': ''} ${is_numeric(c1) ? 'number' : ''}">${c1}</td>`);
-            tds2.push(`<td class="${is_different ? 'add': ''} ${is_numeric(c2) ? 'number' : ''}">${c2}</td>`);
+            tds1.push(`<td class="${is_different ? 'delete': ''} ${get_align_classname(c1, i)}">${c1}</td>`);
+            tds2.push(`<td class="${is_different ? 'add': ''} ${get_align_classname(c2, i)}">${c2}</td>`);
         });
         if ($id('show-match-line').checked || is_any_different) {
             if (is_side_by_side) {
