@@ -223,6 +223,10 @@ td.number {
     top: 0;
 }
 
+.result .original-column {
+    background-color: #99c;
+}
+
 .result .upper-border {
     border-top: solid 1px #333;
 }
