@@ -2,6 +2,10 @@
 
 [CSV Comparator](https://nishihara-daiki.github.io/csv-comparator/) は、2つのCSVファイルを行単位で比較するツールです。
 
+ローカルのブラウザ内で動作するため、ファイルは外部に送信されません。
+
+
+
 ## 使用例
 
 例として、次の2つのファイルを使用します。
