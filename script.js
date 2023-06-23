@@ -3,6 +3,8 @@ const $id = (id) => (document.getElementById(id));
 
 let is_numeric = n => !isNaN(n);
 
+let result_line_num = 0;
+
 /*
   function parseCsvLine from https://zenn.dev/itte/articles/516228940932a5
 */
@@ -423,17 +425,18 @@ let check_key = (cdt) => {
 
 let reset_result = (cdt) => {
     let is_side_by_side = $id('show-side-by-side').checked;
-    let ths = [];
+    let ths = ['<th>#</th>'];
     let ths_from_cdt = cdt['cdt-header'].map(c => `<th>${c}</th>`);
     if (is_side_by_side) {
         ths = ths.concat(['<th></th>']).concat(ths_from_cdt).concat(get_file_last_header_labels(1).map(c => `<th class="original-column">${c}</th>`));
         ths = ths.concat(['<th></th>']).concat(ths_from_cdt).concat(get_file_last_header_labels(2).map(c => `<th class="original-column">${c}</th>`));
     }
     else {
-        ths = ['<th></th>'].concat(ths_from_cdt);
+        ths = ths.concat(['<th></th>']).concat(ths_from_cdt);
     }
     $id('result-head').innerHTML = '<tr>' + ths.join('') + '</tr>';
     $id('result-body').innerHTML = '';
+    result_line_num = 1;
 };
 
 let output_result_line = (cdt, line1, line2, filling_num) => {
@@ -459,7 +462,7 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
                 tds = tds.concat( Array(cdt['cdt-file2'].length).fill('<td></td>') );
                 tds = tds.concat( Array(filling_num).fill('<td></td>') );
             }
-            trs = ['<tr class="upper-border lower-border">' + tds.join('') + '</tr>'];
+            trs = ['<tr class="upper-border lower-border">' + `<th>${result_line_num++}</th>` + tds.join('') + '</tr>'];
         }
     }
     else if (line1 == null && line2 != null) {
@@ -475,7 +478,7 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
             if (is_side_by_side) {
                 tds = tds.concat( line2.map(c => `<td>${c}</td>`) );
             }
-            trs = ['<tr class="upper-border lower-border">' + tds.join('') + '</tr>'];
+            trs = ['<tr class="upper-border lower-border">' + `<th>${result_line_num++}</th>` + tds.join('') + '</tr>'];
         }
     }
     else {
@@ -495,12 +498,12 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
             if (is_side_by_side) {
                 tds1 = tds1.concat( line1.map(c => `<td>${c}</td>`) );
                 tds2 = tds2.concat( line2.map(c => `<td>${c}</td>`) );
-                trs = ['<tr class="upper-border lower-border">' + tds1.join('') + tds2.join('') + '</tr>'];
+                trs = ['<tr class="upper-border lower-border">' + `<th>${result_line_num++}</th>` + tds1.join('') + tds2.join('') + '</tr>'];
             }
             else {
                 trs = [
-                    '<tr class="upper-border">' + tds1.join('') + '</tr>',
-                    '<tr class="lower-border">' + tds2.join('') + '</tr>'
+                    '<tr class="upper-border">' + `<th>${result_line_num}</th>` + tds1.join('') + '</tr>',
+                    '<tr class="lower-border">' + `<th>${result_line_num++}</th>` + tds2.join('') + '</tr>'
                 ];
             }
         }
