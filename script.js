@@ -450,12 +450,13 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
     }
     else if (line1 == null && line2 != null) {
         if ($id('show-key-exists-only-file2').checked) {
-            tds = ['<th></th>'];
+            let tds = [];
             if (is_side_by_side) {
+                tds = ['<th></th>'];
                 tds = tds.concat( Array(cdt['cdt-file1'].length).fill('<td></td>') );
                 tds = tds.concat( Array(filling_num).fill('<td></td>') );
-                tds.push('<th>' + $id('file-2-name').value + '</th>');
             }
+            tds.push('<th>' + $id('file-2-name').value + '</th>');
             tds = tds.concat(convert_line(line2, 'cdt-file2').map(c => `<td class="add ${is_numeric(c) ? 'number' : ''}">${c}</td>`).join(''));
             if (is_side_by_side) {
                 tds = tds.concat( line2.map(c => `<td>${c}</td>`) );
