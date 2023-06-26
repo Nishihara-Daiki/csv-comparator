@@ -139,13 +139,13 @@ let update_preview = (file_num) => {
     let header_num_input = $id('file-' + file_num + '-header-num')
     let header_num = Math.max(+header_num_input.value, 0);
     header_num_input.value = header_num;
-    let id_header = '<tr>' + window.data[file_num][0].map((v, i) => `<th>#${i}</th>`).join('') + '</tr>';
+    let id_header = '<tr>' + '<th></th>' + window.data[file_num][0].map((v, i) => `<th>#${i}</th>`).join('') + '</tr>';
     let headers = window.data[file_num].slice(0, header_num).map((v) => {
-        return '<tr>' + v.map(c => '<th>' + c + '</th>').join('') + '</tr>'
+        return '<tr>' + '<th></th>' + v.map(c => '<th>' + c + '</th>').join('') + '</tr>'
     });
     let preview_num = get_preview_num(file_num, window.data[file_num].length - header_num);
-    let lines = window.data[file_num].slice(header_num, header_num + preview_num).map((v) => {
-        return '<tr>' + v.map(c => `<td ${is_numeric(c) ? 'class="align-right"' : ''}>` + c + '</td>').join('') + '</tr>'
+    let lines = window.data[file_num].slice(header_num, header_num + preview_num).map((v, i) => {
+        return '<tr>' + `<td>${i+1}</td>` + v.map(c => `<td ${is_numeric(c) ? 'class="align-right"' : ''}>` + c + '</td>').join('') + '</tr>'
     });
     table.innerHTML = `<thead>${id_header}${headers.join('')}</thead>` + `<tbody>${lines.join('')}</tbody>`;
 };

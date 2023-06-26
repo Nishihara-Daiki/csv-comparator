@@ -79,11 +79,11 @@ td, th {
     top: 0;
 }
 
-.file-select th, .file-select td {
+.file-select th:not(:first-child), .file-select td:not(:first-child) {
     border: solid 1px #333;
 }
 
-.file-select th {
+.file-select th:not(:first-child) {
     background-color: #669;
     color: #f8f8f8;
 }
