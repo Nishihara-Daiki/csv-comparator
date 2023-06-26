@@ -123,6 +123,17 @@ let get_header_num = (file_num) => {
 };
 
 
+let get_preview_num = (file_num, max) => {
+    let num = $id('file-' + file_num + '-preview-num').value;
+    if (num == 'all') {
+        return max;
+    }
+    else {
+        return Math.min(max, +num);
+    }
+};
+
+
 let update_preview = (file_num) => {
     let table = $id('file-' + file_num + '-preview');
     let header_num_input = $id('file-' + file_num + '-header-num')
@@ -132,7 +143,8 @@ let update_preview = (file_num) => {
     let headers = window.data[file_num].slice(0, header_num).map((v) => {
         return '<tr>' + v.map(c => '<th>' + c + '</th>').join('') + '</tr>'
     });
-    let lines = window.data[file_num].slice(header_num, header_num + 100).map((v) => {
+    let preview_num = get_preview_num(file_num, window.data[file_num].length - header_num);
+    let lines = window.data[file_num].slice(header_num, header_num + preview_num).map((v) => {
         return '<tr>' + v.map(c => `<td ${is_numeric(c) ? 'class="align-right"' : ''}>` + c + '</td>').join('') + '</tr>'
     });
     table.innerHTML = `<thead>${id_header}${headers.join('')}</thead>` + `<tbody>${lines.join('')}</tbody>`;
@@ -655,6 +667,8 @@ let loaded = () => {
     $id('file-2-header-num').onchange = (event) => update_preview(2);
     $id('file-1-reload').onclick = (event) => reload_file(1);
     $id('file-2-reload').onclick = (event) => reload_file(2);
+    $id('file-1-preview-num').onchange = () => update_preview(1);
+    $id('file-2-preview-num').onchange = () => update_preview(2);
     $id('save-cdt-file').onclick = () => save_cdt_file();
     $id('load-cdt-file').onchange = (event) => load_cdt_file(event.target);
     $id('add-column').onclick = () => add_column();
