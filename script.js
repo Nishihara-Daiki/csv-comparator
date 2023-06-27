@@ -1,4 +1,7 @@
-window.data = [null, [], []]
+window.data = [null, [], []];
+window.differs = [];
+window.current_differs_index = 0;
+
 const $id = (id) => (document.getElementById(id));
 
 let is_numeric = n => !isNaN(n);
@@ -559,12 +562,15 @@ let reset_result = (cdt) => {
     $id('result-head').innerHTML = '<tr>' + ths.join('') + '</tr>';
     $id('result-body').innerHTML = '';
     result_line_num = 1;
+    window.differs = [];
+    window.current_differs_index = -1;
 };
 
 let output_result_line = (cdt, line1, line2, filling_num) => {
     let trs = [];
     let convert_line = (line, name) => cdt[name].map(f => f(line));
     let is_side_by_side = $id('show-side-by-side').checked;
+    let is_jumping_marker = false;
     let get_align_classname = (value, index) => {
         if (cdt['cdt-align'][index] == 'auto') {
             if (cdt['cdt-type'][index] == 'key') {
@@ -585,6 +591,7 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
                 tds = tds.concat( Array(filling_num).fill('<td></td>') );
             }
             trs = ['<tr class="upper-border lower-border">' + `<th>${result_line_num++}</th>` + tds.join('') + '</tr>'];
+            is_jumping_marker = true;
         }
     }
     else if (line1 == null && line2 != null) {
@@ -601,6 +608,7 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
                 tds = tds.concat( line2.map(c => `<td>${c}</td>`) );
             }
             trs = ['<tr class="upper-border lower-border">' + `<th>${result_line_num++}</th>` + tds.join('') + '</tr>'];
+            is_jumping_marker = true;
         }
     }
     else {
@@ -613,6 +621,7 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
             let c2 = converted_line2[i];
             let is_different = cdt['cdt-type'][i] == 'compare' && c1 != c2;
             is_any_different = is_different || is_any_different;
+            is_jumping_marker |= is_any_different;
             tds1.push(`<td class="${is_different ? 'delete': ''} ${get_align_classname(c1, i)}">${c1}</td>`);
             tds2.push(`<td class="${is_different ? 'add': ''} ${get_align_classname(c2, i)}">${c2}</td>`);
         });
@@ -630,7 +639,13 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
             }
         }
     }
-    $id('result-body').insertAdjacentHTML('beforeend', trs.join(''));
+    let result_body = $id('result-body');
+    let previous_tr = result_body.lastChild;
+    result_body.insertAdjacentHTML('beforeend', trs.join(''));
+    if (is_jumping_marker) {
+        let tr = previous_tr == null ? result_body.firstChild : previous_tr.nextElementSibling;
+        window.differs.push(tr);
+    }
 };
 
 
@@ -665,6 +680,10 @@ let compare = () => {
     for (let key in file2_key2lines) {
         output_result_line(cdt, null, file2_key2lines[key], line1_num);
     }
+
+    $id('current-differs-index').textContent = window.current_differs_index + 1;
+    $id('differs-length').textContent = window.differs.length;
+
     compare_log('比較を完了しました。', LogType.LOG, true);
 };
 
@@ -691,7 +710,7 @@ let compare_log = (text, type, is_scroll_to_bottom) => {
     if (is_scroll_to_bottom) {
         ul.scrollTo(0, ul.scrollHeight);
     }
-}
+};
 
 
 let copy_result = () => {
@@ -702,6 +721,26 @@ let copy_result = () => {
     s.addRange(r);
     navigator.clipboard.writeText(s);
     s.removeAllRanges();
+};
+
+
+let scroll_result = step => {
+    let cdi = window.current_differs_index;
+    let differs_len = window.differs.length;
+    if (cdi >= 0) {
+        window.differs[cdi].classList.remove('focus');
+    }
+    cdi += step;
+    cdi = Math.min(Math.max(cdi, 0), differs_len - 1);
+    let result = $id('result');
+    result.scrollBy({
+        top: window.differs[cdi].getBoundingClientRect().y - result.getBoundingClientRect().y - 32,
+        behavior: 'smooth'
+    });
+    window.differs[cdi].classList.add('focus');
+    window.current_differs_index = cdi;
+    $id('current-differs-index').textContent = cdi + 1;
+    $id('differs-length').textContent = differs_len;
 };
 
 
@@ -724,6 +763,8 @@ let loaded = () => {
     $id('autofill-header').onclick = () => autofill_header();
     $id('compare').onclick = () => compare();
     $id('copy').onclick = () => copy_result();
+    $id('scroll-to-previous-difference').onclick = () => scroll_result(-1);
+    $id('scroll-to-next-difference').onclick = () => scroll_result(1);
     add_cdt_events();
     filter_history(1);
     filter_history(2);

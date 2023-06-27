@@ -116,7 +116,7 @@
             <label><input id="show-key-exists-only-file2" type="checkbox" checked> キーがファイル2のみに存在する行も表示する</label><br>
             <label><input id="show-side-by-side" type="checkbox"> 左右に並べて表示する（入力の全てのカラムも追加する）</label>
         </div>
-        <div>
+        <div class="exec-buttons">
             <button id="compare">比較実行</button>
             <button id="copy">表をクリップボードにコピー</button>
             <!-- <button>CSV出力</button> -->
@@ -126,6 +126,11 @@
             <ul id="compare-log" class="compare-log"></ul>
         </details>
 
+        <div>
+            <button id="scroll-to-previous-difference">前へ</button>
+            <button id="scroll-to-next-difference">次へ</button>
+            <span id="current-differs-index">0</span> 件 / <span id="differs-length">0</span> 件
+        </div>
         <table id="result" class="result">
             <thead id="result-head"></thead>
             <tbody id="result-body"></tbody>
