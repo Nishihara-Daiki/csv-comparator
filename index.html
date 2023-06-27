@@ -25,9 +25,10 @@
                 <p><label>名前 <input id="file-1-name" type="text" value="file1"></label></p>
                 <p><label>ヘッダ行数 <input id="file-1-header-num" type="number" value="1"></label></p>
             </div>
-            <details>
+            <details class="file-select-advanced-setting">
                 <summary>高度な設定</summary>
-                <p><label>フィルタ</label><br><textarea id="file-1-filter">true</textarea><br><button id="file-1-reload">適用してリロード</button></p>
+                <div><label>フィルタ</label><br><textarea id="file-1-filter">true</textarea><br><button id="file-1-reload">適用してリロード</button></div>
+                <div>入力履歴 <button id="file-1-clear-filter-history" class="clear-filter-history-button">クリア</button><br><ul id="file-1-filter-history"></ul></div>
             </details>
         </div>
         プレビュー（最大トップ <select id="file-1-preview-num"><option value="100">100</option><option value="200">200</option><option value="500">500</option><option value="1000">1,000</option><option value="all">全</option></select>行 / <span id="file-1-len">0</span>行）
@@ -42,7 +43,8 @@
             </div>
             <details>
                 <summary>高度な設定</summary>
-                <p><label>フィルタ</label><br><textarea id="file-2-filter">true</textarea><br><button id="file-2-reload">適用してリロード</button></p>
+                <div><label>フィルタ</label><br><textarea id="file-2-filter">true</textarea><br><button id="file-2-reload">適用してリロード</button></div>
+                <div>入力履歴 <button id="file-2-clear-filter-history" class="clear-filter-history-button">クリア</button><br><ul id="file-2-filter-history"></ul></div>
             </details>
         </div>
         プレビュー（最大トップ <select id="file-2-preview-num"><option value="100">100</option><option value="200">200</option><option value="500">500</option><option value="1000">1,000</option><option value="all">全</option></select>行 / <span id="file-2-len">0</span>行）
