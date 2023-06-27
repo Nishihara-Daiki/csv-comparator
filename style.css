@@ -12,7 +12,7 @@ section {
     text-decoration: underline;
 }
 
-.file-select input[type="file"] {
+input[type="file"] {
     padding: 16px;
     border: dashed 1px #333;
     border-radius: 8px;
@@ -53,6 +53,12 @@ td, th {
 .align-center {
     text-align: center;
 }
+
+
+.template .flex > * {
+    padding: 0 16px 16px 0;
+}
+
 
 .file-select .flex > * {
     padding: 16px 16px 16px 0;

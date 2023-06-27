@@ -9,15 +9,30 @@
     <section>
         <h1>CSV Comparator</h1>
         <p>2つのCSVファイルの比較をします。ローカルのブラウザ内で動作するため、ファイルは外部に送信されません。詳しくは、<a target="_blank" href="https://github.com/Nishihara-Daiki/csv-comparator">ヘルプ</a>を参照してください。</p>
-        ファイル読み込み時の文字コード
-        <select id="encoding">
-            <option value="shift_jis">Shift_JIS</option>
-            <option value="utf-8">UTF-8</option>
-        </select>
     </section>
+
+    <section class="template">
+        <h2>0. テンプレート</h2>
+        <h3>テンプレートの読み込み</h3>
+        <div class="flex">
+            <div><label><input id="template-file" type="file" accept="application/json"></label></div>
+            <div>
+                <label><input id="template-file-select" type="checkbox" checked>ファイル選択（フィルタ）</label><br>
+                <label><input id="template-cdt" type="checkbox" checked>カラム設計</label><br>
+                <button id="load-template-file">読み込み</button>
+            </div>
+        </div>
+        <h3>テンプレートの保存</h3>
+        <button id="save-template-file">入力中の設定をダウンロード</button>
+        </section>
 
     <section class="file-select">
         <h2>1. ファイル選択</h2>
+        ファイル読み込み時の文字コード
+        <select id="encoding">
+            <option value="Shift_JIS">Shift_JIS</option>
+            <option value="UTF-8">UTF-8</option>
+        </select>
         <div class="flex">
             <h3>ファイル1</h3>
             <p><label><input id="file-1" type="file" accept="text/csv"></label></p>
@@ -54,7 +69,6 @@
 
     <section class="column-design">
         <h2>2. カラム設計</h2>
-        <h3>設計</h3>
         <p>列を <button id="add-column">増やす</button> <button id="reduce-column">減らす</button> </p>
         <table id="cdt">
             <thead>
@@ -92,9 +106,9 @@
             </tbody>
         </table>
         <ul id="cdt-error" class="error"></ul>
-        <h3>設計の保存/読み込み</h3>
+        <!-- <h3>設計の保存/読み込み</h3>
         <p>JSONファイルに書き出す <button id="save-cdt-file">ダウンロード</button></p>
-        <p>JSONファイルから読み込む <button class="load-cdt-file-button">ファイルを選択<input id="load-cdt-file" type="file" accept="application/json"></button></p>
+        <p>JSONファイルから読み込む <button class="load-cdt-file-button">ファイルを選択<input id="load-cdt-file" type="file" accept="application/json"></button></p> -->
     </section>
 
     <section class="exec">

@@ -89,7 +89,13 @@ let save_file = (filename, text) => {
 };
 
 
-let save_cdt_file = () => {
+let save_template_file = () => {
+    let file1_filter = $id('file-1-filter').value;
+    let file2_filter = $id('file-2-filter').value;
+    let filter_obj = {
+        "filter1": file1_filter,
+        "filter2": file2_filter
+    };
     let cdt_file1 = get_column_design_line('cdt-file1');
     let cdt_file2 = get_column_design_line('cdt-file2');
     let cdt_type = get_column_design_line('cdt-type');
@@ -102,45 +108,57 @@ let save_cdt_file = () => {
         'cdt-header': cdt_header[i],
         'cdt-align': cdt_align[i]
     }));
-    save_file('cdt.json', JSON.stringify(cdt_obj, null, 4));
+    let template_obj = {
+        "file-select": filter_obj,
+        "cdt": cdt_obj
+    };
+    save_file('template.json', JSON.stringify(template_obj, null, 4));
 };
 
 
-let load_cdt_file = e => {
-    let file = e.files[0];
+let load_template_file = () => {
+    let input = $id('template-file');
+    let file = input.files[0];
     if (file === undefined) {
+        alert('ファイルが空です。');
         return;
     }
-    let encoding = $id('encoding').value;
     let reader = new FileReader();
-
-    reader.readAsText(file, encoding);
+    reader.readAsText(file);
     reader.onload = () => {
-        let cdt_json = JSON.parse(reader.result);
-        let row_diff = cdt_json.length - column_design_table_row_num() + 1;
-        if (row_diff > 0) {
-            range(0, row_diff).forEach(() => add_column());
+        let template_obj = JSON.parse(reader.result);
+        if ($id('template-file-select').checked) {
+            let filter_obj = 'file-select' in template_obj ? template_obj['file-select'] : [];
+            $id('file-1-filter').value = filter_obj['filter1'] || '';
+            $id('file-2-filter').value = filter_obj['filter2'] || '';
         }
-        else {
-            range(0, -row_diff).forEach(() => reduce_column());
+        if ($id('template-cdt').checked) {
+            let cdt_obj = 'cdt' in template_obj ? template_obj['cdt'] : [];
+            let row_diff = cdt_obj.length - column_design_table_row_num() + 1;
+            if (row_diff > 0) {
+                range(0, row_diff).forEach(() => add_column());
+            }
+            else {
+                range(0, -row_diff).forEach(() => reduce_column());
+            }
+            [...$id('cdt-file1').children].slice(1).forEach((td, i) => {
+                td.children[0].textContent = 'cdt-file1' in cdt_obj[i] ? cdt_obj[i]['cdt-file1'] : '';
+            });
+            [...$id('cdt-file2').children].slice(1).forEach((td, i) => {
+                td.children[0].textContent = 'cdt-file2' in cdt_obj[i] ? cdt_obj[i]['cdt-file2'] : '';
+            });
+            [...$id('cdt-type').children].slice(1).forEach((td, i) => {
+                td.children[0].value = 'cdt-type' in cdt_obj[i] ? cdt_obj[i]['cdt-type'] : 'key';
+            });
+            [...$id('cdt-header').children].slice(1).forEach((td, i) => {
+                td.children[0].innerHTML = 'cdt-header' in cdt_obj[i] ? cdt_obj[i]['cdt-header'].replace(/\n/g, '<br>') : '';
+            });
+            [...$id('cdt-align').children].slice(1).forEach((td, i) => {
+                td.children[0].value = 'cdt-align' in cdt_obj[i] ? cdt_obj[i]['cdt-align'] : 'auto';
+            });
+            check_cdt();
         }
-        [...$id('cdt-file1').children].slice(1).forEach((td, i) => {
-            td.children[0].textContent = 'cdt-file1' in cdt_json[i] ? cdt_json[i]['cdt-file1'] : '';
-        });
-        [...$id('cdt-file2').children].slice(1).forEach((td, i) => {
-            td.children[0].textContent = 'cdt-file2' in cdt_json[i] ? cdt_json[i]['cdt-file2'] : '';
-        });
-        [...$id('cdt-type').children].slice(1).forEach((td, i) => {
-            td.children[0].value = 'cdt-type' in cdt_json[i] ? cdt_json[i]['cdt-type'] : 'key';
-        });
-        [...$id('cdt-header').children].slice(1).forEach((td, i) => {
-            td.children[0].innerHTML = 'cdt-header' in cdt_json[i] ? cdt_json[i]['cdt-header'].replace(/\n/g, '<br>') : '';
-        });
-        [...$id('cdt-align').children].slice(1).forEach((td, i) => {
-            td.children[0].value = 'cdt-align' in cdt_json[i] ? cdt_json[i]['cdt-align'] : 'auto';
-        });
-        check_cdt();
-        e.value = '';
+        input.value = '';
     };
 };
 
@@ -698,8 +716,8 @@ let loaded = () => {
     $id('file-2-clear-filter-history').onclick = () => clear_filter_history(2);
     $id('file-1-preview-num').onchange = () => update_preview(1);
     $id('file-2-preview-num').onchange = () => update_preview(2);
-    $id('save-cdt-file').onclick = () => save_cdt_file();
-    $id('load-cdt-file').onchange = (event) => load_cdt_file(event.target);
+    $id('save-template-file').onclick = () => save_template_file();
+    $id('load-template-file').onclick = () => load_template_file();
     $id('add-column').onclick = () => add_column();
     $id('reduce-column').onclick = () => reduce_column();
     $id('autofill-file2').onclick = () => autofill_file2();
