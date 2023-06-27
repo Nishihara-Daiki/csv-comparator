@@ -31,9 +31,36 @@ let read_csv = (file, callback) => {
 };
 
 
+let filter_history = (file_num, new_filter) => {
+    let filters = file_num == 1 ? localStorage.file1_filters : localStorage.file2_filters;
+    filters = filters === undefined ? [] : JSON.parse(filters);
+    if (new_filter !== undefined) {
+        filters = [new_filter].concat(filters.filter(v => v != new_filter));
+        let filters_string = JSON.stringify(filters);
+        file_num == 1 ? (localStorage.file1_filters = filters_string) : (localStorage.file2_filters = filters_string);
+    }
+    clear_filter_history(file_num);
+    let ul = $id(`file-${file_num}-filter-history`);
+    filters.forEach(v => {
+        let li = document.createElement('li');
+        li.innerHTML = '<code>' + v.replace(/\n/g, '<br>') + '</code>';
+        li.onclick = () => { $id(`file-${file_num}-filter`).value = v; filter_history(file_num, v); }
+        ul.appendChild(li);
+    });
+};
+
+
+let clear_filter_history = (file_num) => {
+    let ul = $id(`file-${file_num}-filter-history`);
+    ul.innerHTML = '';
+    file_num == 1 ? (localStorage.file1_filters = '') : (localStorage.file2_filters = '');
+};
+
+
 let reload_file = (file_num) => {
     let file = $id('file-' + file_num).files[0];
     let header_num = get_header_num(file_num);
+    filter_history(file_num, $id('file-' + file_num + '-filter').value);
     read_csv(file, (table) => {
         window.data[file_num] = table.filter((a, i) => (i < header_num || eval($id('file-' + file_num + '-filter').value)));
         update_preview(file_num);
@@ -667,6 +694,8 @@ let loaded = () => {
     $id('file-2-header-num').onchange = (event) => update_preview(2);
     $id('file-1-reload').onclick = (event) => reload_file(1);
     $id('file-2-reload').onclick = (event) => reload_file(2);
+    $id('file-1-clear-filter-history').onclick = () => clear_filter_history(1);
+    $id('file-2-clear-filter-history').onclick = () => clear_filter_history(2);
     $id('file-1-preview-num').onchange = () => update_preview(1);
     $id('file-2-preview-num').onchange = () => update_preview(2);
     $id('save-cdt-file').onclick = () => save_cdt_file();
@@ -678,6 +707,8 @@ let loaded = () => {
     $id('compare').onclick = () => compare();
     $id('copy').onclick = () => copy_result();
     add_cdt_events();
+    filter_history(1);
+    filter_history(2);
 };
 
 window.onload = loaded();

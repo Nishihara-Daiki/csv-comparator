@@ -62,9 +62,43 @@ td, th {
     margin-bottom: 16px;
 }
 
-.file-select details p {
-    margin: 0;
+.file-select details::after {
+    content: '';
+    clear: both;
+    display: block;
 }
+
+.file-select details div {
+    margin-right: 16px;
+    float: left;
+}
+
+.file-select details ul {
+    margin: 0;
+    padding: 0;
+    min-width: 120px;
+    max-height: 120px;
+    overflow: auto;
+    border: solid 1px #ccc;
+}
+
+.file-select details li {
+    padding: 4px;
+    list-style: none;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.file-select details li:hover {
+    background-color: #e8e8e8;
+}
+
+.file-select .clear-filter-history-button {
+    margin-bottom: 4px;
+    font-size: 0.5rem;
+    vertical-align: middle;
+}
+
 
 .file-select table {
     max-width: 100%;
