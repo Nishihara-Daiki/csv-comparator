@@ -39,8 +39,8 @@ let filter_history = (file_num, new_filter) => {
         let filters_string = JSON.stringify(filters);
         file_num == 1 ? (localStorage.file1_filters = filters_string) : (localStorage.file2_filters = filters_string);
     }
-    clear_filter_history(file_num);
     let ul = $id(`file-${file_num}-filter-history`);
+    ul.innerHTML = '';
     filters.forEach(v => {
         let li = document.createElement('li');
         li.innerHTML = '<code>' + v.replace(/\n/g, '<br>') + '</code>';
@@ -53,7 +53,7 @@ let filter_history = (file_num, new_filter) => {
 let clear_filter_history = (file_num) => {
     let ul = $id(`file-${file_num}-filter-history`);
     ul.innerHTML = '';
-    file_num == 1 ? (localStorage.file1_filters = '') : (localStorage.file2_filters = '');
+    file_num == 1 ? (localStorage.file1_filters = '[]') : (localStorage.file2_filters = '[]');
 };
 
 
