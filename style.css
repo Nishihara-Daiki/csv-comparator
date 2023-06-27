@@ -7,11 +7,6 @@ section {
     padding: 0 32px;
 }
 
-.file-select h3 {
-    font-weight: normal;
-    text-decoration: underline;
-}
-
 input[type="file"] {
     padding: 16px;
     border: dashed 1px #333;
@@ -60,6 +55,11 @@ td, th {
 }
 
 
+.file-select h3 {
+    font-weight: normal;
+    text-decoration: underline;
+}
+
 .file-select .flex > * {
     padding: 16px 16px 16px 0;
 }
@@ -105,7 +105,6 @@ td, th {
     vertical-align: middle;
 }
 
-
 .file-select table {
     max-width: 100%;
     min-height: 160px;
@@ -149,7 +148,6 @@ td, th {
     background-color: inherit;
 }
 
-
 .column-design thead td::before {
     content: '';
     margin: 12px auto 4px;
@@ -169,14 +167,12 @@ td, th {
     vertical-align: top;
 }
 
-
 .column-design .cdt-type td select,
 .column-design .cdt-align td select {
     width: 100%;
     padding: 4px 8px;
     border: none;
 }
-
 
 .column-design .cdt-file td {
     position: relative;

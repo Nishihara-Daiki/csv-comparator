@@ -10,14 +10,14 @@ let result_line_num = 0;
 */
 const parse_csv_line = line => line.split(',').reduce(([data, isInQuotes], text) => {
     if (isInQuotes) {
-      data[data.length - 1] += ',' + text.replace(/\"+/g, m => '"'.repeat(m.length / 2))
-      return [data, !(text.match(/\"*$/)[0].length % 2)]
+      data[data.length - 1] += ',' + text.replace(/\"+/g, m => '"'.repeat(m.length / 2));
+      return [data, !(text.match(/\"*$/)[0].length % 2)];
     } else {
-      const match = text.match(/^(\"?)((.*?)(\"*))$/)
-      data.push(match[1] ? match[2].replace(/\"+/g, m => '"'.repeat(m.length / 2)) : match[2])
-      return [data, match[1] && !(match[4].length % 2)]
+      const match = text.match(/^(\"?)((.*?)(\"*))$/);
+      data.push(match[1] ? match[2].replace(/\"+/g, m => '"'.repeat(m.length / 2)) : match[2]);
+      return [data, match[1] && !(match[4].length % 2)];
     }
-}, [[]])[0]
+}, [[]])[0];
 
 
 let read_csv = (file, callback) => {
@@ -44,7 +44,7 @@ let filter_history = (file_num, new_filter) => {
     filters.forEach(v => {
         let li = document.createElement('li');
         li.innerHTML = '<code>' + v.replace(/\n/g, '<br>') + '</code>';
-        li.onclick = () => { $id(`file-${file_num}-filter`).value = v; filter_history(file_num, v); }
+        li.onclick = () => { $id(`file-${file_num}-filter`).value = v; filter_history(file_num, v); };
         ul.appendChild(li);
     });
 };
@@ -181,7 +181,7 @@ let get_preview_num = (file_num, max) => {
 
 let update_preview = (file_num) => {
     let table = $id('file-' + file_num + '-preview');
-    let header_num_input = $id('file-' + file_num + '-header-num')
+    let header_num_input = $id('file-' + file_num + '-header-num');
     let header_num = Math.max(+header_num_input.value, 0);
     header_num_input.value = header_num;
     let id_header = '<tr>' + '<th></th>' + window.data[file_num][0].map((v, i) => `<th>#${i}</th>`).join('') + '</tr>';
@@ -230,7 +230,6 @@ let show_suggest = (e, file_num) => {
 
 
 let hide_suggest = e => {
-    // console.log(e);
     let ul = e.nextElementSibling;
     setTimeout(() => {
         ul.classList.add('none');
@@ -240,10 +239,9 @@ let hide_suggest = e => {
 
 
 let add_drag_events = (e, i, tds) => {
-    e.onclick = () => console.log('clicked')
+    e.onclick = () => console.log('clicked');
     e.ondragstart = event => {
         event.dataTransfer.setData('text/plain', i);
-        console.log('start')
     };
     e.ondragover = event => {
         event.preventDefault();
@@ -286,7 +284,8 @@ let add_drag_events = (e, i, tds) => {
         move_td(document.querySelectorAll('#cdt-type td'));
         move_td(document.querySelectorAll('#cdt-header td'));
     }
-}
+};
+
 
 let add_cdt_events = () => {
     document.querySelectorAll('#cdt-moving-column td').forEach(add_drag_events);
@@ -296,6 +295,7 @@ let add_cdt_events = () => {
     document.querySelectorAll('#cdt-file2 td span').forEach(e => e.onfocus = () => show_suggest(e, 2));
     document.querySelectorAll('#cdt-file2 td span').forEach(e => e.onblur = () => hide_suggest(e));
 };
+
 
 let add_column = () => {
     $id('cdt-moving-column').insertAdjacentHTML('beforeend', '<td draggable="true"></td>');
@@ -370,11 +370,9 @@ let parser = (equation) => {
             return [a => eval(equation.slice(1).replace(/#([0-9]+)(\([^)]*\))?/g, 'a[$1]'))];
 
         case ParseType.SINGLE:
-            // return [a => a[+equation.slice(1)]];
             return [a => a[+equation.match(/^#([0-9]+)(\([^)]*\))?$/)[1]]];
 
         case ParseType.MULTIPLE:
-            // let from_to = equation.replaceAll('#', '').split('-').map(a => +a);
             let from_to = equation.replace(/^#([0-9]+)(\([^)]*\))?-#([0-9]+)(\([^)]*\))?$/g, '$1-$3').split('-').map(a => +a);
             
             return range(from_to[0], from_to[1] + 1).map(i => (a => a[i]));
@@ -398,7 +396,7 @@ let parse_all = () => {
             cdt['cdt-file1'] = cdt['cdt-file1'].concat(file1_parsed);
             cdt['cdt-file2'] = cdt['cdt-file2'].concat(parser(cdt_file2[i]));
             cdt['cdt-type'] = cdt['cdt-type'].concat( file1_parsed.fill(cdt_type[i]) );
-            cdt['cdt-header'] = cdt['cdt-header'].concat( file1_parsed.map((v, j) => cdt_header[i].split('\n').concat(file1_parsed.fill(''))[j]) )
+            cdt['cdt-header'] = cdt['cdt-header'].concat( file1_parsed.map((v, j) => cdt_header[i].split('\n').concat(file1_parsed.fill(''))[j]) );
             cdt['cdt-align'] = cdt['cdt-align'].concat( file1_parsed.fill(cdt_align[i]) );
         }
     });
@@ -428,7 +426,6 @@ let autofill_file2 = () => {
     file1_header.forEach((h, i) => {
         switch (get_parse_type(h)) {
             case ParseType.SINGLE:
-                // a = parser(h).map(p => search(p(file1_header_labels)));
                 let label = search(parser(h)[0](file1_header_labels));
                 if (label != -1) {
                     cdt_file2.children[i + 1].children[0].textContent = `#${label}`;
@@ -522,6 +519,7 @@ let check_cdt = () => {
 
 let get_key_funcs = (cdt, name) => cdt[name].filter((v, i) => cdt['cdt-type'][i] == 'key');
 let create_key = (key_funcs, line) => key_funcs.map(f => f(line)).join(',');
+
 
 let check_key = (cdt) => {
 
@@ -695,6 +693,7 @@ let compare_log = (text, type, is_scroll_to_bottom) => {
     }
 }
 
+
 let copy_result = () => {
     let r = document.createRange();
     r.selectNodeContents($id('result'));
@@ -704,6 +703,7 @@ let copy_result = () => {
     navigator.clipboard.writeText(s);
     s.removeAllRanges();
 };
+
 
 let loaded = () => {
     $id('file-1').onchange = (event) => file_changed(event.target, 1);
@@ -730,14 +730,3 @@ let loaded = () => {
 };
 
 window.onload = loaded();
-
-
-
-// // DEBUG
-// window.data = [
-//     [],
-//     [["h1", "h2", "h3"], ["key1","0","1"],["key2","2","3"], ["key3", "0", "0"]],
-//     [["h1", "h2", "h4"], ["key1","0","1"],["key2","2","4"], ["key4", "0", "0"]]
-// ]
-// compare()
-
