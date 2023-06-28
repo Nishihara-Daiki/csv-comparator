@@ -6,8 +6,6 @@ const $id = (id) => (document.getElementById(id));
 
 let is_numeric = n => !isNaN(n);
 
-let result_line_num = 0;
-
 /*
   function parseCsvLine from https://zenn.dev/itte/articles/516228940932a5
 */
@@ -552,6 +550,7 @@ let reset_result = (cdt) => {
     let is_side_by_side = $id('show-side-by-side').checked;
     let ths = ['<th>#</th>'];
     let ths_from_cdt = cdt['cdt-header'].map(c => `<th>${c}</th>`);
+    let result_line_num = 0;
     if (is_side_by_side) {
         ths = ths.concat(['<th></th>']).concat(ths_from_cdt).concat(get_file_last_header_labels(1).map(c => `<th class="original-column">${c}</th>`));
         ths = ths.concat(['<th></th>']).concat(ths_from_cdt).concat(get_file_last_header_labels(2).map(c => `<th class="original-column">${c}</th>`));
@@ -561,12 +560,12 @@ let reset_result = (cdt) => {
     }
     $id('result-head').innerHTML = '<tr>' + ths.join('') + '</tr>';
     $id('result-body').innerHTML = '';
-    result_line_num = 1;
     window.differs = [];
     window.current_differs_index = -1;
+    return result_line_num;
 };
 
-let output_result_line = (cdt, line1, line2, filling_num) => {
+let output_result_line = (cdt, line1, line2, filling_num, result_line_num) => {
     let trs = [];
     let convert_line = (line, name) => cdt[name].map(f => f(line));
     let is_side_by_side = $id('show-side-by-side').checked;
@@ -590,7 +589,7 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
                 tds = tds.concat( Array(cdt['cdt-file2'].length).fill('<td></td>') );
                 tds = tds.concat( Array(filling_num).fill('<td></td>') );
             }
-            trs = ['<tr class="upper-border lower-border">' + `<th>${result_line_num++}</th>` + tds.join('') + '</tr>'];
+            trs = ['<tr class="upper-border lower-border">' + `<th>${++result_line_num}</th>` + tds.join('') + '</tr>'];
             is_jumping_marker = true;
         }
     }
@@ -607,7 +606,7 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
             if (is_side_by_side) {
                 tds = tds.concat( line2.map(c => `<td>${c}</td>`) );
             }
-            trs = ['<tr class="upper-border lower-border">' + `<th>${result_line_num++}</th>` + tds.join('') + '</tr>'];
+            trs = ['<tr class="upper-border lower-border">' + `<th>${++result_line_num}</th>` + tds.join('') + '</tr>'];
             is_jumping_marker = true;
         }
     }
@@ -629,12 +628,12 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
             if (is_side_by_side) {
                 tds1 = tds1.concat( line1.map(c => `<td>${c}</td>`) );
                 tds2 = tds2.concat( line2.map(c => `<td>${c}</td>`) );
-                trs = ['<tr class="upper-border lower-border">' + `<th>${result_line_num++}</th>` + tds1.join('') + tds2.join('') + '</tr>'];
+                trs = ['<tr class="upper-border lower-border">' + `<th>${++result_line_num}</th>` + tds1.join('') + tds2.join('') + '</tr>'];
             }
             else {
                 trs = [
-                    '<tr class="upper-border">' + `<th>${result_line_num}</th>` + tds1.join('') + '</tr>',
-                    '<tr class="lower-border">' + `<th>${result_line_num++}</th>` + tds2.join('') + '</tr>'
+                    '<tr class="upper-border">' + `<th>${++result_line_num}</th>` + tds1.join('') + '</tr>',
+                    '<tr class="lower-border">' + `<th>${result_line_num}</th>` + tds2.join('') + '</tr>'
                 ];
             }
         }
@@ -646,6 +645,7 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
         let tr = previous_tr == null ? result_body.firstChild : previous_tr.nextElementSibling;
         window.differs.push(tr);
     }
+    return result_line_num;
 };
 
 
@@ -655,7 +655,7 @@ let compare = () => {
     if (check_key(cdt) == false) {
         return;
     }
-    reset_result(cdt);
+    let result_line_num = reset_result(cdt);
 
     let file2_key_funcs = get_key_funcs(cdt, 'cdt-file2');
     let file2_header_num = get_header_num(2);
@@ -670,19 +670,20 @@ let compare = () => {
     window.data[1].slice(file1_header_num).forEach((line, i) => {
         let key = create_key(file1_key_funcs, line);
         if (key in file2_key2lines) {  // file1のkeyがfile2にある
-            output_result_line(cdt, line, file2_key2lines[key]);
+            result_line_num = output_result_line(cdt, line, file2_key2lines[key], null, result_line_num);
             delete file2_key2lines[key];
         }
         else {
-            output_result_line(cdt, line, null, line2_num);
+            result_line_num = output_result_line(cdt, line, null, line2_num, result_line_num);
         }
     });
     for (let key in file2_key2lines) {
-        output_result_line(cdt, null, file2_key2lines[key], line1_num);
+        result_line_num = output_result_line(cdt, null, file2_key2lines[key], line1_num, result_line_num);
     }
 
     $id('current-differs-index').textContent = window.current_differs_index + 1;
     $id('differs-length').textContent = window.differs.length;
+    $id('result-num').textContent = result_line_num;
 
     compare_log('比較を完了しました。', LogType.LOG, true);
 };
