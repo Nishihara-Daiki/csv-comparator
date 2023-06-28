@@ -65,7 +65,6 @@ let reload_file = (file_num) => {
     read_csv(file, (table) => {
         window.data[file_num] = table.filter((a, i) => (i < header_num || eval($id('file-' + file_num + '-filter').value)));
         update_preview(file_num);
-        $id('file-' + file_num + '-len').textContent = window.data[file_num].length - header_num;
     });
 };
 
@@ -194,6 +193,7 @@ let update_preview = (file_num) => {
         return '<tr>' + `<td>${i+1}</td>` + v.map(c => `<td ${is_numeric(c) ? 'class="align-right"' : ''}>` + c + '</td>').join('') + '</tr>'
     });
     table.innerHTML = `<thead>${id_header}${headers.join('')}</thead>` + `<tbody>${lines.join('')}</tbody>`;
+    $id('file-' + file_num + '-len').textContent = window.data[file_num].length - header_num;
 };
 
 
