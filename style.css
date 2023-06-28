@@ -7,12 +7,7 @@ section {
     padding: 0 32px;
 }
 
-.file-select h3 {
-    font-weight: normal;
-    text-decoration: underline;
-}
-
-.file-select input[type="file"] {
+input[type="file"] {
     padding: 16px;
     border: dashed 1px #333;
     border-radius: 8px;
@@ -52,6 +47,17 @@ td, th {
 
 .align-center {
     text-align: center;
+}
+
+
+.template .flex > * {
+    padding: 0 16px 16px 0;
+}
+
+
+.file-select h3 {
+    font-weight: normal;
+    text-decoration: underline;
 }
 
 .file-select .flex > * {
@@ -99,7 +105,6 @@ td, th {
     vertical-align: middle;
 }
 
-
 .file-select table {
     max-width: 100%;
     min-height: 160px;
@@ -143,7 +148,6 @@ td, th {
     background-color: inherit;
 }
 
-
 .column-design thead td::before {
     content: '';
     margin: 12px auto 4px;
@@ -163,14 +167,12 @@ td, th {
     vertical-align: top;
 }
 
-
 .column-design .cdt-type td select,
 .column-design .cdt-align td select {
     width: 100%;
     padding: 4px 8px;
     border: none;
 }
-
 
 .column-design .cdt-file td {
     position: relative;
@@ -243,7 +245,7 @@ td, th {
 }
 
 
-.exec button {
+.exec-buttons button {
     padding: 8px 16px;
 }
 
@@ -266,6 +268,7 @@ td, th {
 }
 
 .result {
+    margin-top: 16px;
     min-height: 400px;
     max-height: 800px;
     overflow: auto;
@@ -311,4 +314,8 @@ td, th {
 
 .none {
     display: none;
+}
+
+.focus {
+    background: #ffc;
 }

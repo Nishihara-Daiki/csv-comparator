@@ -1,23 +1,24 @@
-window.data = [null, [], []]
+window.data = [null, [], []];
+window.differs = [];
+window.current_differs_index = 0;
+
 const $id = (id) => (document.getElementById(id));
 
 let is_numeric = n => !isNaN(n);
-
-let result_line_num = 0;
 
 /*
   function parseCsvLine from https://zenn.dev/itte/articles/516228940932a5
 */
 const parse_csv_line = line => line.split(',').reduce(([data, isInQuotes], text) => {
     if (isInQuotes) {
-      data[data.length - 1] += ',' + text.replace(/\"+/g, m => '"'.repeat(m.length / 2))
-      return [data, !(text.match(/\"*$/)[0].length % 2)]
+      data[data.length - 1] += ',' + text.replace(/\"+/g, m => '"'.repeat(m.length / 2));
+      return [data, !(text.match(/\"*$/)[0].length % 2)];
     } else {
-      const match = text.match(/^(\"?)((.*?)(\"*))$/)
-      data.push(match[1] ? match[2].replace(/\"+/g, m => '"'.repeat(m.length / 2)) : match[2])
-      return [data, match[1] && !(match[4].length % 2)]
+      const match = text.match(/^(\"?)((.*?)(\"*))$/);
+      data.push(match[1] ? match[2].replace(/\"+/g, m => '"'.repeat(m.length / 2)) : match[2]);
+      return [data, match[1] && !(match[4].length % 2)];
     }
-}, [[]])[0]
+}, [[]])[0];
 
 
 let read_csv = (file, callback) => {
@@ -44,7 +45,7 @@ let filter_history = (file_num, new_filter) => {
     filters.forEach(v => {
         let li = document.createElement('li');
         li.innerHTML = '<code>' + v.replace(/\n/g, '<br>') + '</code>';
-        li.onclick = () => { $id(`file-${file_num}-filter`).value = v; filter_history(file_num, v); }
+        li.onclick = () => { $id(`file-${file_num}-filter`).value = v; filter_history(file_num, v); };
         ul.appendChild(li);
     });
 };
@@ -64,7 +65,6 @@ let reload_file = (file_num) => {
     read_csv(file, (table) => {
         window.data[file_num] = table.filter((a, i) => (i < header_num || eval($id('file-' + file_num + '-filter').value)));
         update_preview(file_num);
-        $id('file-' + file_num + '-len').textContent = window.data[file_num].length - header_num;
     });
 };
 
@@ -89,7 +89,13 @@ let save_file = (filename, text) => {
 };
 
 
-let save_cdt_file = () => {
+let save_template_file = () => {
+    let file1_filter = $id('file-1-filter').value;
+    let file2_filter = $id('file-2-filter').value;
+    let filter_obj = {
+        "filter1": file1_filter,
+        "filter2": file2_filter
+    };
     let cdt_file1 = get_column_design_line('cdt-file1');
     let cdt_file2 = get_column_design_line('cdt-file2');
     let cdt_type = get_column_design_line('cdt-type');
@@ -102,45 +108,57 @@ let save_cdt_file = () => {
         'cdt-header': cdt_header[i],
         'cdt-align': cdt_align[i]
     }));
-    save_file('cdt.json', JSON.stringify(cdt_obj, null, 4));
+    let template_obj = {
+        "file-select": filter_obj,
+        "cdt": cdt_obj
+    };
+    save_file('template.json', JSON.stringify(template_obj, null, 4));
 };
 
 
-let load_cdt_file = e => {
-    let file = e.files[0];
+let load_template_file = () => {
+    let input = $id('template-file');
+    let file = input.files[0];
     if (file === undefined) {
+        alert('ファイルが空です。');
         return;
     }
-    let encoding = $id('encoding').value;
     let reader = new FileReader();
-
-    reader.readAsText(file, encoding);
+    reader.readAsText(file);
     reader.onload = () => {
-        let cdt_json = JSON.parse(reader.result);
-        let row_diff = cdt_json.length - column_design_table_row_num() + 1;
-        if (row_diff > 0) {
-            range(0, row_diff).forEach(() => add_column());
+        let template_obj = JSON.parse(reader.result);
+        if ($id('template-file-select').checked) {
+            let filter_obj = 'file-select' in template_obj ? template_obj['file-select'] : [];
+            $id('file-1-filter').value = filter_obj['filter1'] || '';
+            $id('file-2-filter').value = filter_obj['filter2'] || '';
         }
-        else {
-            range(0, -row_diff).forEach(() => reduce_column());
+        if ($id('template-cdt').checked) {
+            let cdt_obj = 'cdt' in template_obj ? template_obj['cdt'] : [];
+            let row_diff = cdt_obj.length - column_design_table_row_num() + 1;
+            if (row_diff > 0) {
+                range(0, row_diff).forEach(() => add_column());
+            }
+            else {
+                range(0, -row_diff).forEach(() => reduce_column());
+            }
+            [...$id('cdt-file1').children].slice(1).forEach((td, i) => {
+                td.children[0].textContent = 'cdt-file1' in cdt_obj[i] ? cdt_obj[i]['cdt-file1'] : '';
+            });
+            [...$id('cdt-file2').children].slice(1).forEach((td, i) => {
+                td.children[0].textContent = 'cdt-file2' in cdt_obj[i] ? cdt_obj[i]['cdt-file2'] : '';
+            });
+            [...$id('cdt-type').children].slice(1).forEach((td, i) => {
+                td.children[0].value = 'cdt-type' in cdt_obj[i] ? cdt_obj[i]['cdt-type'] : 'key';
+            });
+            [...$id('cdt-header').children].slice(1).forEach((td, i) => {
+                td.children[0].innerHTML = 'cdt-header' in cdt_obj[i] ? cdt_obj[i]['cdt-header'].replace(/\n/g, '<br>') : '';
+            });
+            [...$id('cdt-align').children].slice(1).forEach((td, i) => {
+                td.children[0].value = 'cdt-align' in cdt_obj[i] ? cdt_obj[i]['cdt-align'] : 'auto';
+            });
+            check_cdt();
         }
-        [...$id('cdt-file1').children].slice(1).forEach((td, i) => {
-            td.children[0].textContent = 'cdt-file1' in cdt_json[i] ? cdt_json[i]['cdt-file1'] : '';
-        });
-        [...$id('cdt-file2').children].slice(1).forEach((td, i) => {
-            td.children[0].textContent = 'cdt-file2' in cdt_json[i] ? cdt_json[i]['cdt-file2'] : '';
-        });
-        [...$id('cdt-type').children].slice(1).forEach((td, i) => {
-            td.children[0].value = 'cdt-type' in cdt_json[i] ? cdt_json[i]['cdt-type'] : 'key';
-        });
-        [...$id('cdt-header').children].slice(1).forEach((td, i) => {
-            td.children[0].innerHTML = 'cdt-header' in cdt_json[i] ? cdt_json[i]['cdt-header'].replace(/\n/g, '<br>') : '';
-        });
-        [...$id('cdt-align').children].slice(1).forEach((td, i) => {
-            td.children[0].value = 'cdt-align' in cdt_json[i] ? cdt_json[i]['cdt-align'] : 'auto';
-        });
-        check_cdt();
-        e.value = '';
+        input.value = '';
     };
 };
 
@@ -163,7 +181,7 @@ let get_preview_num = (file_num, max) => {
 
 let update_preview = (file_num) => {
     let table = $id('file-' + file_num + '-preview');
-    let header_num_input = $id('file-' + file_num + '-header-num')
+    let header_num_input = $id('file-' + file_num + '-header-num');
     let header_num = Math.max(+header_num_input.value, 0);
     header_num_input.value = header_num;
     let id_header = '<tr>' + '<th></th>' + window.data[file_num][0].map((v, i) => `<th>#${i}</th>`).join('') + '</tr>';
@@ -175,6 +193,7 @@ let update_preview = (file_num) => {
         return '<tr>' + `<td>${i+1}</td>` + v.map(c => `<td ${is_numeric(c) ? 'class="align-right"' : ''}>` + c + '</td>').join('') + '</tr>'
     });
     table.innerHTML = `<thead>${id_header}${headers.join('')}</thead>` + `<tbody>${lines.join('')}</tbody>`;
+    $id('file-' + file_num + '-len').textContent = window.data[file_num].length - header_num;
 };
 
 
@@ -212,7 +231,6 @@ let show_suggest = (e, file_num) => {
 
 
 let hide_suggest = e => {
-    // console.log(e);
     let ul = e.nextElementSibling;
     setTimeout(() => {
         ul.classList.add('none');
@@ -222,10 +240,9 @@ let hide_suggest = e => {
 
 
 let add_drag_events = (e, i, tds) => {
-    e.onclick = () => console.log('clicked')
+    e.onclick = () => console.log('clicked');
     e.ondragstart = event => {
         event.dataTransfer.setData('text/plain', i);
-        console.log('start')
     };
     e.ondragover = event => {
         event.preventDefault();
@@ -268,7 +285,8 @@ let add_drag_events = (e, i, tds) => {
         move_td(document.querySelectorAll('#cdt-type td'));
         move_td(document.querySelectorAll('#cdt-header td'));
     }
-}
+};
+
 
 let add_cdt_events = () => {
     document.querySelectorAll('#cdt-moving-column td').forEach(add_drag_events);
@@ -278,6 +296,7 @@ let add_cdt_events = () => {
     document.querySelectorAll('#cdt-file2 td span').forEach(e => e.onfocus = () => show_suggest(e, 2));
     document.querySelectorAll('#cdt-file2 td span').forEach(e => e.onblur = () => hide_suggest(e));
 };
+
 
 let add_column = () => {
     $id('cdt-moving-column').insertAdjacentHTML('beforeend', '<td draggable="true"></td>');
@@ -352,11 +371,9 @@ let parser = (equation) => {
             return [a => eval(equation.slice(1).replace(/#([0-9]+)(\([^)]*\))?/g, 'a[$1]'))];
 
         case ParseType.SINGLE:
-            // return [a => a[+equation.slice(1)]];
             return [a => a[+equation.match(/^#([0-9]+)(\([^)]*\))?$/)[1]]];
 
         case ParseType.MULTIPLE:
-            // let from_to = equation.replaceAll('#', '').split('-').map(a => +a);
             let from_to = equation.replace(/^#([0-9]+)(\([^)]*\))?-#([0-9]+)(\([^)]*\))?$/g, '$1-$3').split('-').map(a => +a);
             
             return range(from_to[0], from_to[1] + 1).map(i => (a => a[i]));
@@ -380,7 +397,7 @@ let parse_all = () => {
             cdt['cdt-file1'] = cdt['cdt-file1'].concat(file1_parsed);
             cdt['cdt-file2'] = cdt['cdt-file2'].concat(parser(cdt_file2[i]));
             cdt['cdt-type'] = cdt['cdt-type'].concat( file1_parsed.fill(cdt_type[i]) );
-            cdt['cdt-header'] = cdt['cdt-header'].concat( file1_parsed.map((v, j) => cdt_header[i].split('\n').concat(file1_parsed.fill(''))[j]) )
+            cdt['cdt-header'] = cdt['cdt-header'].concat( file1_parsed.map((v, j) => cdt_header[i].split('\n').concat(file1_parsed.fill(''))[j]) );
             cdt['cdt-align'] = cdt['cdt-align'].concat( file1_parsed.fill(cdt_align[i]) );
         }
     });
@@ -410,7 +427,6 @@ let autofill_file2 = () => {
     file1_header.forEach((h, i) => {
         switch (get_parse_type(h)) {
             case ParseType.SINGLE:
-                // a = parser(h).map(p => search(p(file1_header_labels)));
                 let label = search(parser(h)[0](file1_header_labels));
                 if (label != -1) {
                     cdt_file2.children[i + 1].children[0].textContent = `#${label}`;
@@ -505,6 +521,7 @@ let check_cdt = () => {
 let get_key_funcs = (cdt, name) => cdt[name].filter((v, i) => cdt['cdt-type'][i] == 'key');
 let create_key = (key_funcs, line) => key_funcs.map(f => f(line)).join(',');
 
+
 let check_key = (cdt) => {
 
     let _check_key = (n, name, label) => {
@@ -533,6 +550,7 @@ let reset_result = (cdt) => {
     let is_side_by_side = $id('show-side-by-side').checked;
     let ths = ['<th>#</th>'];
     let ths_from_cdt = cdt['cdt-header'].map(c => `<th>${c}</th>`);
+    let result_line_num = 0;
     if (is_side_by_side) {
         ths = ths.concat(['<th></th>']).concat(ths_from_cdt).concat(get_file_last_header_labels(1).map(c => `<th class="original-column">${c}</th>`));
         ths = ths.concat(['<th></th>']).concat(ths_from_cdt).concat(get_file_last_header_labels(2).map(c => `<th class="original-column">${c}</th>`));
@@ -542,13 +560,16 @@ let reset_result = (cdt) => {
     }
     $id('result-head').innerHTML = '<tr>' + ths.join('') + '</tr>';
     $id('result-body').innerHTML = '';
-    result_line_num = 1;
+    window.differs = [];
+    window.current_differs_index = -1;
+    return result_line_num;
 };
 
-let output_result_line = (cdt, line1, line2, filling_num) => {
+let output_result_line = (cdt, line1, line2, filling_num, result_line_num) => {
     let trs = [];
     let convert_line = (line, name) => cdt[name].map(f => f(line));
     let is_side_by_side = $id('show-side-by-side').checked;
+    let is_jumping_marker = false;
     let get_align_classname = (value, index) => {
         if (cdt['cdt-align'][index] == 'auto') {
             if (cdt['cdt-type'][index] == 'key') {
@@ -568,7 +589,8 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
                 tds = tds.concat( Array(cdt['cdt-file2'].length).fill('<td></td>') );
                 tds = tds.concat( Array(filling_num).fill('<td></td>') );
             }
-            trs = ['<tr class="upper-border lower-border">' + `<th>${result_line_num++}</th>` + tds.join('') + '</tr>'];
+            trs = ['<tr class="upper-border lower-border">' + `<th>${++result_line_num}</th>` + tds.join('') + '</tr>'];
+            is_jumping_marker = true;
         }
     }
     else if (line1 == null && line2 != null) {
@@ -584,7 +606,8 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
             if (is_side_by_side) {
                 tds = tds.concat( line2.map(c => `<td>${c}</td>`) );
             }
-            trs = ['<tr class="upper-border lower-border">' + `<th>${result_line_num++}</th>` + tds.join('') + '</tr>'];
+            trs = ['<tr class="upper-border lower-border">' + `<th>${++result_line_num}</th>` + tds.join('') + '</tr>'];
+            is_jumping_marker = true;
         }
     }
     else {
@@ -597,6 +620,7 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
             let c2 = converted_line2[i];
             let is_different = cdt['cdt-type'][i] == 'compare' && c1 != c2;
             is_any_different = is_different || is_any_different;
+            is_jumping_marker |= is_any_different;
             tds1.push(`<td class="${is_different ? 'delete': ''} ${get_align_classname(c1, i)}">${c1}</td>`);
             tds2.push(`<td class="${is_different ? 'add': ''} ${get_align_classname(c2, i)}">${c2}</td>`);
         });
@@ -604,17 +628,24 @@ let output_result_line = (cdt, line1, line2, filling_num) => {
             if (is_side_by_side) {
                 tds1 = tds1.concat( line1.map(c => `<td>${c}</td>`) );
                 tds2 = tds2.concat( line2.map(c => `<td>${c}</td>`) );
-                trs = ['<tr class="upper-border lower-border">' + `<th>${result_line_num++}</th>` + tds1.join('') + tds2.join('') + '</tr>'];
+                trs = ['<tr class="upper-border lower-border">' + `<th>${++result_line_num}</th>` + tds1.join('') + tds2.join('') + '</tr>'];
             }
             else {
                 trs = [
-                    '<tr class="upper-border">' + `<th>${result_line_num}</th>` + tds1.join('') + '</tr>',
-                    '<tr class="lower-border">' + `<th>${result_line_num++}</th>` + tds2.join('') + '</tr>'
+                    '<tr class="upper-border">' + `<th>${++result_line_num}</th>` + tds1.join('') + '</tr>',
+                    '<tr class="lower-border">' + `<th>${result_line_num}</th>` + tds2.join('') + '</tr>'
                 ];
             }
         }
     }
-    $id('result-body').insertAdjacentHTML('beforeend', trs.join(''));
+    let result_body = $id('result-body');
+    let previous_tr = result_body.lastChild;
+    result_body.insertAdjacentHTML('beforeend', trs.join(''));
+    if (is_jumping_marker) {
+        let tr = previous_tr == null ? result_body.firstChild : previous_tr.nextElementSibling;
+        window.differs.push(tr);
+    }
+    return result_line_num;
 };
 
 
@@ -624,7 +655,7 @@ let compare = () => {
     if (check_key(cdt) == false) {
         return;
     }
-    reset_result(cdt);
+    let result_line_num = reset_result(cdt);
 
     let file2_key_funcs = get_key_funcs(cdt, 'cdt-file2');
     let file2_header_num = get_header_num(2);
@@ -639,16 +670,21 @@ let compare = () => {
     window.data[1].slice(file1_header_num).forEach((line, i) => {
         let key = create_key(file1_key_funcs, line);
         if (key in file2_key2lines) {  // file1のkeyがfile2にある
-            output_result_line(cdt, line, file2_key2lines[key]);
+            result_line_num = output_result_line(cdt, line, file2_key2lines[key], null, result_line_num);
             delete file2_key2lines[key];
         }
         else {
-            output_result_line(cdt, line, null, line2_num);
+            result_line_num = output_result_line(cdt, line, null, line2_num, result_line_num);
         }
     });
     for (let key in file2_key2lines) {
-        output_result_line(cdt, null, file2_key2lines[key], line1_num);
+        result_line_num = output_result_line(cdt, null, file2_key2lines[key], line1_num, result_line_num);
     }
+
+    $id('current-differs-index').textContent = window.current_differs_index + 1;
+    $id('differs-length').textContent = window.differs.length;
+    $id('result-num').textContent = result_line_num;
+
     compare_log('比較を完了しました。', LogType.LOG, true);
 };
 
@@ -675,7 +711,8 @@ let compare_log = (text, type, is_scroll_to_bottom) => {
     if (is_scroll_to_bottom) {
         ul.scrollTo(0, ul.scrollHeight);
     }
-}
+};
+
 
 let copy_result = () => {
     let r = document.createRange();
@@ -686,6 +723,27 @@ let copy_result = () => {
     navigator.clipboard.writeText(s);
     s.removeAllRanges();
 };
+
+
+let scroll_result = step => {
+    let cdi = window.current_differs_index;
+    let differs_len = window.differs.length;
+    if (cdi >= 0) {
+        window.differs[cdi].classList.remove('focus');
+    }
+    cdi += step;
+    cdi = Math.min(Math.max(cdi, 0), differs_len - 1);
+    let result = $id('result');
+    result.scrollBy({
+        top: window.differs[cdi].getBoundingClientRect().y - result.getBoundingClientRect().y - 32,
+        behavior: 'smooth'
+    });
+    window.differs[cdi].classList.add('focus');
+    window.current_differs_index = cdi;
+    $id('current-differs-index').textContent = cdi + 1;
+    $id('differs-length').textContent = differs_len;
+};
+
 
 let loaded = () => {
     $id('file-1').onchange = (event) => file_changed(event.target, 1);
@@ -698,28 +756,19 @@ let loaded = () => {
     $id('file-2-clear-filter-history').onclick = () => clear_filter_history(2);
     $id('file-1-preview-num').onchange = () => update_preview(1);
     $id('file-2-preview-num').onchange = () => update_preview(2);
-    $id('save-cdt-file').onclick = () => save_cdt_file();
-    $id('load-cdt-file').onchange = (event) => load_cdt_file(event.target);
+    $id('save-template-file').onclick = () => save_template_file();
+    $id('load-template-file').onclick = () => load_template_file();
     $id('add-column').onclick = () => add_column();
     $id('reduce-column').onclick = () => reduce_column();
     $id('autofill-file2').onclick = () => autofill_file2();
     $id('autofill-header').onclick = () => autofill_header();
     $id('compare').onclick = () => compare();
     $id('copy').onclick = () => copy_result();
+    $id('scroll-to-previous-difference').onclick = () => scroll_result(-1);
+    $id('scroll-to-next-difference').onclick = () => scroll_result(1);
     add_cdt_events();
     filter_history(1);
     filter_history(2);
 };
 
 window.onload = loaded();
-
-
-
-// // DEBUG
-// window.data = [
-//     [],
-//     [["h1", "h2", "h3"], ["key1","0","1"],["key2","2","3"], ["key3", "0", "0"]],
-//     [["h1", "h2", "h4"], ["key1","0","1"],["key2","2","4"], ["key4", "0", "0"]]
-// ]
-// compare()
-
