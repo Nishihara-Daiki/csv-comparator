@@ -158,7 +158,7 @@ let load_template_file = () => {
             });
             check_cdt();
         }
-        input.value = '';
+        alert('テンプレートを読み込みました。');
     };
 };
 
