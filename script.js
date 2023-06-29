@@ -214,7 +214,7 @@ let show_suggest = (e, file_num) => {
     header.forEach((header, i) => {
         let li = document.createElement('li');
         li.textContent = `#${i} (${header})`;
-        li.onclick = () => {
+        li.onmousedown = () => {
             switch (get_parse_type(e.textContent)) {
                 case ParseType.SINGLE:
                     e.textContent = `#${i}(${header})`;
@@ -232,10 +232,8 @@ let show_suggest = (e, file_num) => {
 
 let hide_suggest = e => {
     let ul = e.nextElementSibling;
-    setTimeout(() => {
-        ul.classList.add('none');
-        ul.innerHTML = '';
-    }, 150);
+    ul.classList.add('none');
+    ul.innerHTML = '';
 };
 
 
