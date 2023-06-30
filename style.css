@@ -230,11 +230,6 @@ td, th {
     opacity: 0;
 }
 
-
-.error {
-    color: red;
-}
-
 .column-design ul.error {
     min-height: 40px;
     padding: 0;
@@ -307,6 +302,14 @@ td, th {
     background: #fcc;
 }
 
+
+.error {
+    color: red;
+}
+
+.warning {
+    color: #c60;
+}
 
 .flex {
     display: flex;

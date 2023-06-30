@@ -665,7 +665,12 @@ let compare = () => {
     let line1_num = window.data[1][0].length;
     let line2_num = window.data[2][0].length;
 
-    window.data[1].slice(file1_header_num).forEach((line, i) => {
+    let show_limit = $id('show-limit').checked ? +$id('show-limit-num').value : Infinity;
+
+    for (let line of window.data[1].slice(file1_header_num)) {
+        if (result_line_num >= show_limit) {
+            break;
+        }
         let key = create_key(file1_key_funcs, line);
         if (key in file2_key2lines) {  // file1のkeyがfile2にある
             result_line_num = output_result_line(cdt, line, file2_key2lines[key], null, result_line_num);
@@ -674,14 +679,21 @@ let compare = () => {
         else {
             result_line_num = output_result_line(cdt, line, null, line2_num, result_line_num);
         }
-    });
+    }
     for (let key in file2_key2lines) {
+        if (result_line_num >= show_limit) {
+            break;
+        }
         result_line_num = output_result_line(cdt, null, file2_key2lines[key], line1_num, result_line_num);
     }
 
     $id('current-differs-index').textContent = window.current_differs_index + 1;
     $id('differs-length').textContent = window.differs.length;
     $id('result-num').textContent = result_line_num;
+
+    if (result_line_num >= show_limit) {
+        compare_log('比較上限数に達しました。', LogType.WARNING, true);
+    }
 
     compare_log('比較を完了しました。', LogType.LOG, true);
 };
